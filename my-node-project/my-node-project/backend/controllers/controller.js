@@ -1,19 +1,17 @@
-const express = require('express');
-const router = express.Router();
 const Slot = require('../models/Slot');
 
-// Get all slots
-router.get('/', async (req, res) => {
+// Function to get all slots
+exports.getSlots = async (req, res) => {
     try {
         const slots = await Slot.find();
         res.json(slots);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-});
+};
 
-// Create a slot
-router.post('/create', async (req, res) => {
+// Function to create a slot
+exports.createSlot = async (req, res) => {
     const { date, role } = req.body;
     const slot = new Slot({ date, role });
 
@@ -23,10 +21,10 @@ router.post('/create', async (req, res) => {
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
-});
+};
 
-// Update a slot (e.g., booking it)
-router.put('/:id', async (req, res) => {
+// Function to update a slot
+exports.updateSlot = async (req, res) => {
     try {
         const slot = await Slot.findById(req.params.id);
         if (!slot) {
@@ -39,10 +37,10 @@ router.put('/:id', async (req, res) => {
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
-});
+};
 
-// Delete a slot
-router.delete('/:id', async (req, res) => {
+// Function to delete a slot
+exports.deleteSlot = async (req, res) => {
     try {
         const slot = await Slot.findByIdAndDelete(req.params.id);
         if (!slot) {
@@ -52,6 +50,4 @@ router.delete('/:id', async (req, res) => {
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
-});
-
-module.exports = router;
+};

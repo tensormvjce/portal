@@ -1,9 +1,20 @@
 const mongoose = require('mongoose');
 
-const slotSchema = new mongoose.Schema({
-    date: { type: String, required: true },
-    role: { type: String, required: true, enum: ['content', 'design'] },
-    booked: { type: Boolean, default: false }
+const SlotSchema = new mongoose.Schema({
+    date: {
+        type: Date,
+        required: true
+    },
+    role: {
+        type: String,
+        required: true
+    },
+    booked: {
+        type: Boolean,
+        default: false
+    }
 });
 
-module.exports = mongoose.model('Slot', slotSchema);
+const Slot = mongoose.model('Slot', SlotSchema);
+
+module.exports = Slot;
