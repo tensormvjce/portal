@@ -1,11 +1,7 @@
-const express = require('express');
-const app = express();
+const mongoose = require('mongoose');
 
-app.get('/', (req, res) => {
-    res.send('Hello, World! This is srikar first Node.js app.');
-});
+const mongoURI = process.env.MONGO_URI || 'mongodb+srv://<username>:<password>@cluster0.mongodb.net/your-db-name?retryWrites=true&w=majority';
 
-const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log('MongoDB connected'))
+    .catch(err => console.log(err));

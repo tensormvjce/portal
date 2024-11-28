@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slot Booking System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Slot Booking System</h1>
+  
+  <h2>Available Slots:</h2>
+  <div id="slots-container"></div>
+
+  <h3>Book a Slot</h3>
+  <form id="booking-form">
+    <label for="date">Date:</label>
+    <input type="date" id="date" required><br>
+    <label for="role">Role:</label>
+    <select id="role" required>
+      <option value="content">Content</option>
+      <option value="design">Design</option>
+    </select><br>
+    <button type="submit">Book Slot</button>
+  </form>
+
+  <script src="app.js"></script>
+</body>
+</html>
