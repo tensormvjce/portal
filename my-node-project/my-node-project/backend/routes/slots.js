@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Slot = require('../models/Slot');
+const Slot = require('portal\my-node-project\my-node-project\backend\models\slot.js');
 
 // Get all slots
 router.get('/', async (req, res) => {

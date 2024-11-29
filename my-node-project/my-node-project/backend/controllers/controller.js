@@ -1,4 +1,4 @@
-const Slot = require('../models/Slot');
+const Slot = require('portal\my-node-project\my-node-project\backend\models\slot.js');
 
 // Function to get all slots
 exports.getSlots = async (req, res) => {
