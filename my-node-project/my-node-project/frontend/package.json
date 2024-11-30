@@ -1,8 +1,0 @@
-{
-  "name": "frontend",
-  "version": "1.0.0",
-  "description": "Frontend for Slot Booking App",
-  "scripts": {
-    "start": "parcel index.html"
-  }
-}
