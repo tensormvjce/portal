@@ -1,4 +1,3 @@
-/* General Styles */
 body {
     font-family: 'Arial', sans-serif;
     background: #1a1919;
@@ -10,9 +9,8 @@ body {
     height: 100vh;
 }
 
-/* Container */
 .container {
-    margin: 20px
+    margin: 20px;
     width: 100%;
     max-width: 400px;
     background: #a5a2a2;
@@ -21,7 +19,6 @@ body {
     box-shadow: 0 4px 10px rgba(110, 109, 109, 0.1);
 }
 
-/* Title */
 .title {
     font-size: 1.8em;
     font-weight: bold;
@@ -30,12 +27,10 @@ body {
     color: #333;
 }
 
-/* Form Styling */
 .form {
     width: 100%;
 }
 
-/* Alert */
 .alert {
     background: #28a745;
     color: white;
@@ -46,21 +41,18 @@ body {
     margin-bottom: 15px;
 }
 
-/* Input Box */
 .inputBox {
     margin-bottom: 20px;
     display: flex;
     flex-direction: column;
 }
 
-/* Labels */
 .inputBox label {
     font-size: 0.9em;
     margin-bottom: 5px;
     color: #555;
 }
 
-/* Inputs & Selects */
 .inputBox input,
 .inputBox select {
     padding: 10px;
@@ -71,13 +63,11 @@ body {
     transition: 0.3s;
 }
 
-/* Inputs Focus */
 .inputBox input:focus,
 .inputBox select:focus {
     border-color: #007bff;
 }
 
-/* Button */
 .submitBtn {
     width: 100%;
     padding: 10px 0;
@@ -94,7 +84,6 @@ body {
     background: #0056b3;
 }
 
-/* Responsive Design */
 @media (max-width: 480px) {
     .container {
         padding: 15px;
