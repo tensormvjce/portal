@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slot Booking | Firebase</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/7.14.1-0/firebase-app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/7.14.1-0/firebase-database.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="title">Slot Booking System</h1>
+        <form action="" id="slotBookingForm" class="form">
+            <div class="alert" style="display: none;">Your slot has been booked successfully!</div>
+
+            <div class="inputBox">
+                <label for="userName">Name</label>
+                <input type="text" id="userName" placeholder="Enter your name" required />
+            </div>
+
+            <div class="inputBox">
+                <label for="dateRangeSelect">Date Range</label>
+                <select id="dateRangeSelect" required>
+                    <option value="" disabled selected>Select Date Range</option>
+                    <option value="Nov23-Dec3">Nov 23 - Dec 3</option>
+                    <option value="Dec4-Dec10">Dec 4 - Dec 10</option>
+                    <option value="Dec11-Dec17">Dec 11 - Dec 17</option>
+                </select>
+            </div>
+
+            <div class="inputBox">
+                <label for="daySelect">Day</label>
+                <select id="daySelect" required>
+                    <option value="" disabled selected>Select Day</option>
+                    <option value="Friday">Friday</option>
+                    <option value="Sunday">Sunday</option>
+                </select>
+            </div>
+
+            <div class="inputBox">
+                <label for="roleSelect">Role</label>
+                <select id="roleSelect" required>
+                    <option value="" disabled selected>Select Role</option>
+                    <option value="Content">Content</option>
+                    <option value="Design">Design</option>
+                </select>
+            </div>
+
+            <div class="inputBox">
+                <button type="submit" class="submitBtn">Book Slot</button>
+            </div>
+        </form>
+
+        <!-- Slot availability display -->
+        <div id="slotAvailability">
+            <h2>Slot Availability</h2>
+            <div id="nov23Dec3Details">
+                <h3>Nov 23 - Dec 3</h3>
+                <ul id="nov23Dec3Slots"></ul>
+            </div>
+            <div id="dec4Dec10Details">
+                <h3>Dec 4 - Dec 10</h3>
+                <ul id="dec4Dec10Slots"></ul>
+            </div>
+            <div id="dec11Dec17Details">
+                <h3>Dec 11 - Dec 17</h3>
+                <ul id="dec11Dec17Slots"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="./portal.js"></script>
+</body>
+
+</html>
