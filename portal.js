@@ -75,7 +75,7 @@ function getElementVal(id) {
 // Function to display availability for each date range
 function displaySlotAvailability() {
     const slotAvailabilityContainer = document.getElementById("slotAvailability");
-    const dateRanges = ["Nov23-Dec3", "Dec4-Dec10", "Dec11-Dec17"];
+    const dateRanges = [/* "Nov23-Dec3", */ "Dec4-Dec10", "Dec11-Dec17"];
 
     // Clear previous availability data
     slotAvailabilityContainer.innerHTML = "";
@@ -254,8 +254,8 @@ window.onload = displaySlotAvailability;
    
    function update() {
    
-     velocity.tx *= 0.59;
-     velocity.ty *= 0.59;
+     velocity.tx *= 0.5;
+     velocity.ty *= 0.5;
    
      velocity.x += ( velocity.tx - velocity.x ) * 0.8;
      velocity.y += ( velocity.ty - velocity.y ) * 0.8;
