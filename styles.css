@@ -95,7 +95,7 @@ body {
 
 @media (max-width: 480px) {
     .container {
-        padding: 15px;
+        padding: 10px;
     }
 
     .title {
