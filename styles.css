@@ -10,23 +10,42 @@ body {
 }
 
 .container {
-    margin: 50px;
-/*     height: 80vh; */
-    /* width: 70%; */
-    max-width: 400px;
-    border-radius: 10px;
-    padding: 15px;
-    background: rgba(248, 248, 248, 0.1);
-    border-radius: 16px;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(7.8px);
-    -webkit-backdrop-filter: blur(7.8px);
-    border: 1px solid rgba(29, 29, 29, 0.93);
-    width: 100%; /* Adjust width as necessary */
-    max-height: 300px; /* Set a fixed height */
-    overflow-y: auto; /* Enable vertical scrolling */
-    border: 1px solid #ccc; /* Optional: Add border for better visual separation */
+  margin: 50px auto;
+  height: 70vh;
+  max-width: 400px;
+  border-radius: 10px;
+  padding: 15px;
+  background: rgba(248, 248, 248, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(7.8px);
+  -webkit-backdrop-filter: blur(7.8px);
+  border: 1px solid rgba(29, 29, 29, 0.93);
+  width: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
+
+.container::-webkit-scrollbar {
+  width: 8px; /* Width of the scrollbar */
+}
+
+.container::-webkit-scrollbar-track {
+  background: rgba(248, 248, 248, 0.1); /* Track color */
+  border-radius: 10px; /* Rounded corners for the track */
+}
+
+.container::-webkit-scrollbar-thumb {
+  background: rgba(29, 29, 29, 0.5); /* Color of the thumb */
+  border-radius: 10px; /* Rounded thumb */
+  border: 2px solid rgba(248, 248, 248, 0.1); /* Subtle border around the thumb */
+}
+
+.container::-webkit-scrollbar-thumb:hover {
+  background: rgba(29, 29, 29, 0.7); /* Darken the thumb color when hovered */
+}
+
+
 
 .title {
     font-size: 1.8em;
