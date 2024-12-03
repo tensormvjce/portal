@@ -22,6 +22,10 @@ body {
     backdrop-filter: blur(7.8px);
     -webkit-backdrop-filter: blur(7.8px);
     border: 1px solid rgba(29, 29, 29, 0.93);
+    width: 100%; /* Adjust width as necessary */
+    max-height: 300px; /* Set a fixed height */
+    overflow-y: auto; /* Enable vertical scrolling */
+    border: 1px solid #ccc; /* Optional: Add border for better visual separation */
 }
 
 .title {
