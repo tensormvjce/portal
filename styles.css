@@ -227,3 +227,38 @@ a:hover {
 .logo{
   width: 50px;
 }
+
+/* Style the slot availability list */
+#slotAvailability ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+#slotAvailability li {
+  margin: 10px 0;
+  font-size: 14px;
+  color: #ffffff; /* Adjust text color if needed */
+}
+
+/* Ensure the clickable link is properly styled and aligned */
+#slotAvailability a {
+  color: #00aced; /* WhatsApp link color */
+  text-decoration: none;
+  font-weight: bold;
+  /* margin-left: 10px; Add some spacing between the label and link */
+  
+}
+
+#slotAvailability a:hover {
+  text-decoration: underline; /* Optional: Add underline on hover */
+}
+
+/* For better readability */
+#slotAvailability h3 {
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+
+#slotAvailability li span {
+  margin-right: 5px; /* Add spacing for labels */
+}
