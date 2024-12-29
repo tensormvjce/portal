@@ -1,13 +1,14 @@
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBjWCAC_gazDGfozuqC3VOdCYazK_UdPP8",
-  authDomain: "portal-bce40.firebaseapp.com",
-  databaseURL: "https://portal-bce40-default-rtdb.firebaseio.com/",
-  projectId: "portal-bce40",
-  storageBucket: "portal-bce40.firebasestorage.app",
-  messagingSenderId: "338576186844",
-  appId: "1:338576186844:web:1afb2ea6f4464f84708319",
-  measurementId: "G-BZ3K2HF01W"
+  apiKey: "AIzaSyBSbonwVE3PPXIIrSrvrB75u2AQ_B_Tni4",
+  authDomain: "discraft-c1c41.firebaseapp.com",
+  databaseURL: "https://discraft-c1c41-default-rtdb.firebaseio.com",
+  projectId: "discraft-c1c41",
+  storageBucket: "discraft-c1c41.firebasestorage.app",
+  storageBucket: "discraft-c1c41.appspot.com",
+  messagingSenderId: "525620150766",
+  appId: "1:525620150766:web:a426e68d206c68764aceff",
+  measurementId: "G-2TRNRYRX5E"
 };
 
 // Initialize Firebase
