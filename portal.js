@@ -70,7 +70,7 @@ function saveBooking(userName, dateRange, day, role, number) {
 
 // Display availability
 function displaySlotAvailability() {
-  const dateRanges = ["Dec30-Jan5", "Jan6-Jan12"]; // change here for changing the display
+  const dateRanges = ["Jan13-Jan19", "Jan20-Jan26"]; // change here for changing the display
   const slotAvailabilityContainer = document.getElementById("slotAvailability");
 
   slotAvailabilityContainer.innerHTML = "";
