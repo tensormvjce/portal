@@ -1,321 +1,509 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tensor Portal</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #6366f1;
-            --background: #0f172a;
-            --surface: #1e293b;
-            --text: #f8fafc;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tensor Portal</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #6366f1;
+      --background: #0f172a;
+      --surface: #1e293b;
+      --text: #f8fafc;
+    }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', sans-serif;
-        }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
 
-        body {
-            background: var(--background);
-            color: var(--text);
-            min-height: 100vh;
-            padding: 2rem;
-        }
+    body {
+      background: var(--background);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem;
+      position: relative;
+    }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            gap: 2rem;
-            grid-template-columns: 1fr 1fr;
-        }
+    /* Canvas styles so that it sits behind the content */
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
 
-        .card {
-            background: var(--surface);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      gap: 2rem;
+      grid-template-columns: 1fr 1fr;
+    }
 
-        .form-card {
-            position: sticky;
-            top: 2rem;
-            height: fit-content;
-        }
+    .card {
+      background: var(--surface);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
 
-        .title {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
+    .form-card {
+      position: sticky;
+      top: 2rem;
+      height: fit-content;
+    }
 
-        .title img {
-            height: 50px;
-        }
+    .title {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
 
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
+    .title img {
+      height: 50px;
+    }
 
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-            color: #94a3b8;
-        }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
 
-        input, select {
-            width: 100%;
-            padding: 0.75rem;
-            background: #334155;
-            border: 1px solid #475569;
-            border-radius: 0.5rem;
-            color: var(--text);
-            transition: all 0.3s ease;
-        }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      color: #94a3b8;
+    }
 
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-        }
+    input, select {
+      width: 100%;
+      padding: 0.75rem;
+      background: #334155;
+      border: 1px solid #475569;
+      border-radius: 0.5rem;
+      color: var(--text);
+      transition: all 0.3s ease;
+    }
 
-        button {
-            width: 100%;
-            padding: 1rem;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
 
-        button:hover {
-            opacity: 0.9;
-        }
+    button {
+      width: 100%;
+      padding: 1rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
 
-        .alert {
-            padding: 1rem;
-            background: #059669;
-            color: white;
-            border-radius: 0.5rem;
-            margin-bottom: 1rem;
-            display: none;
-        }
+    button:hover {
+      opacity: 0.9;
+    }
 
-        .slots-list {
-            display: grid;
-            gap: 1rem;
-        }
+    .alert {
+      padding: 1rem;
+      background: #059669;
+      color: white;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
 
-        .slot-item {
-            padding: 1rem;
-            background: #334155;
-            border-radius: 0.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    .slots-list {
+      display: grid;
+      gap: 1rem;
+    }
 
-        .slot-details {
-            display: grid;
-            gap: 0.25rem;
-        }
+    .slot-item {
+      padding: 1rem;
+      background: #334155;
+      border-radius: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-        .slot-date {
-            font-size: 0.9rem;
-            color: #94a3b8;
-        }
+    .slot-details {
+      display: grid;
+      gap: 0.25rem;
+    }
 
-        .whatsapp-link {
-            color: var(--primary);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+    .slot-date {
+      font-size: 0.9rem;
+      color: #94a3b8;
+    }
 
-        .whatsapp-link:hover {
-            text-decoration: underline;
-        }
+    .whatsapp-link {
+      color: var(--primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
 
-        @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-            
-            .form-card {
-                position: static;
-            }
-        }
-    </style>
+    .whatsapp-link:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+      
+      .form-card {
+        position: static;
+      }
+    }
+  </style>
 </head>
-
 <body>
-    <div class="container">
-        <div class="card form-card">
-            <div class="title">
-                <img src="logo_white.png" alt="Tensor Logo">
-                <h1>Weekly Post Slots</h1>
-            </div>
+  <canvas></canvas>
+  <div class="container">
+    <div class="card form-card">
+      <div class="title">
+        <img src="logo_white.png" alt="Tensor Logo">
+        <h1>Weekly Post Slots</h1>
+      </div>
 
-            <div class="alert">Slot booked successfully!</div>
+      <div class="alert">Slot booked successfully!</div>
 
-            <form id="slotBookingForm">
-                <div class="form-group">
-                    <label for="userName">Full Name</label>
-                    <input type="text" id="userName" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="dateRangeSelect">Date Range</label>
-                    <select id="dateRangeSelect" required>
-                        <option value="" disabled selected>Select dates</option>
-                        <option value="Feb19-Feb26">Feb 19 - Feb 26</option>
-                        <option value="Feb27-Mar6">Feb 27 - Mar 6</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="daySelect">Preferred Day</label>
-                    <select id="daySelect" required>
-                        <option value="" disabled selected>Choose day</option>
-                        <option value="Wednesday">Wednesday</option>
-                        <option value="Friday">Friday</option>
-                        <option value="Sunday">Sunday</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="number">WhatsApp Number</label>
-                    <input type="tel" id="number" placeholder="Include country code" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="roleSelect">Your Role</label>
-                    <select id="roleSelect" required>
-                        <option value="" disabled selected>Select role</option>
-                        <option value="Content">Content</option>
-                        <option value="Design">Design</option>
-                    </select>
-                </div>
-
-                <button type="submit">Book Slot →</button>
-            </form>
+      <form id="slotBookingForm">
+        <div class="form-group">
+          <label for="userName">Full Name</label>
+          <input type="text" id="userName" required>
         </div>
 
-        <div class="card">
-            <h2>Available Slots</h2>
-            <div class="slots-list" id="slotAvailability"></div>
+        <div class="form-group">
+          <label for="dateRangeSelect">Date Range</label>
+          <select id="dateRangeSelect" required>
+            <option value="" disabled selected>Select dates</option>
+            <option value="Feb19-Feb26">Feb 19 - Feb 26</option>
+            <option value="Feb27-Mar6">Feb 27 - Mar 6</option>
+          </select>
         </div>
+
+        <div class="form-group">
+          <label for="daySelect">Preferred Day</label>
+          <select id="daySelect" required>
+            <option value="" disabled selected>Choose day</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Friday">Friday</option>
+            <option value="Sunday">Sunday</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="number">WhatsApp Number</label>
+          <input type="tel" id="number" placeholder="Include country code" required>
+        </div>
+
+        <div class="form-group">
+          <label for="roleSelect">Your Role</label>
+          <select id="roleSelect" required>
+            <option value="" disabled selected>Select role</option>
+            <option value="Content">Content</option>
+            <option value="Design">Design</option>
+          </select>
+        </div>
+
+        <button type="submit">Book Slot →</button>
+      </form>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/7.14.1-0/firebase-app.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/7.14.1-0/firebase-database.js"></script>
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBSbonwVE3PPXIIrSrvrB75u2AQ_B_Tni4",
-            authDomain: "discraft-c1c41.firebaseapp.com",
-            databaseURL: "https://discraft-c1c41-default-rtdb.firebaseio.com",
-            projectId: "discraft-c1c41",
-            storageBucket: "discraft-c1c41.appspot.com",
-            messagingSenderId: "525620150766",
-            appId: "1:525620150766:web:a426e68d206c68764aceff"
-        };
+    <div class="card">
+        <center><h2>Bookings: </h2></center> <br>
+      <div class="slots-list" id="slotAvailability"></div>
+    </div>
+  </div>
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database().ref("slotBookings");
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/7.14.1-0/firebase-app.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/7.14.1-0/firebase-database.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBSbonwVE3PPXIIrSrvrB75u2AQ_B_Tni4",
+      authDomain: "discraft-c1c41.firebaseapp.com",
+      databaseURL: "https://discraft-c1c41-default-rtdb.firebaseio.com",
+      projectId: "discraft-c1c41",
+      storageBucket: "discraft-c1c41.appspot.com",
+      messagingSenderId: "525620150766",
+      appId: "1:525620150766:web:a426e68d206c68764aceff"
+    };
 
-        document.getElementById('slotBookingForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database().ref("slotBookings");
 
-            const formData = {
-                name: document.getElementById('userName').value.trim(),
-                dateRange: document.getElementById('dateRangeSelect').value,
-                day: document.getElementById('daySelect').value,
-                role: document.getElementById('roleSelect').value,
-                number: document.getElementById('number').value.trim()
-            };
+    document.getElementById('slotBookingForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-            if (Object.values(formData).some(v => !v)) {
-                alert('Please fill all fields');
-                return;
-            }
+      const formData = {
+        name: document.getElementById('userName').value.trim(),
+        dateRange: document.getElementById('dateRangeSelect').value,
+        day: document.getElementById('daySelect').value,
+        role: document.getElementById('roleSelect').value,
+        number: document.getElementById('number').value.trim()
+      };
 
-            try {
-                const slotRef = db.child(`${formData.dateRange}/${formData.day}/${formData.role}`);
-                const snapshot = await slotRef.once('value');
-                
-                if (snapshot.exists()) {
-                    alert('Slot already taken!');
-                    return;
-                }
+      if (Object.values(formData).some(v => !v)) {
+        alert('Please fill all fields');
+        return;
+      }
 
-                await slotRef.set({
-                    name: formData.name,
-                    number: formData.number
-                });
-
-                document.querySelector('.alert').style.display = 'block';
-                setTimeout(() => {
-                    document.querySelector('.alert').style.display = 'none';
-                }, 3000);
-
-                e.target.reset();
-                displaySlots();
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Booking failed. Please try again.');
-            }
-        });
-
-        async function displaySlots() {
-            const container = document.getElementById('slotAvailability');
-            container.innerHTML = '';
-
-            const dateRanges = ['Feb19-Feb26', 'Feb27-Mar6'];
-            
-            for (const range of dateRanges) {
-                const snapshot = await db.child(range).once('value');
-                const data = snapshot.val() || {};
-
-                const rangeDiv = document.createElement('div');
-                rangeDiv.innerHTML = `
-                    <h3>${range.replace('-', ' - ')}</h3>
-                    ${Object.entries(data).map(([day, roles]) => `
-                        <div class="slot-item">
-                            <div class="slot-details">
-                                <div class="slot-day">${day}</div>
-                                ${Object.entries(roles).map(([role, details]) => `
-                                    <div class="slot-role">
-                                        ${role}: 
-                                        <a href="https://wa.me/${details.number}" 
-                                           target="_blank"
-                                           class="whatsapp-link">
-                                            <i class="fab fa-whatsapp"></i>
-                                            ${details.name}
-                                        </a>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `).join('')}
-                `;
-                
-                container.appendChild(rangeDiv);
-            }
+      try {
+        const slotRef = db.child(`${formData.dateRange}/${formData.day}/${formData.role}`);
+        const snapshot = await slotRef.once('value');
+        
+        if (snapshot.exists()) {
+          alert('Slot already taken!');
+          return;
         }
 
-        window.onload = displaySlots;
-    </script>
+        await slotRef.set({
+          name: formData.name,
+          number: formData.number
+        });
+
+        document.querySelector('.alert').style.display = 'block';
+        setTimeout(() => {
+          document.querySelector('.alert').style.display = 'none';
+        }, 3000);
+
+        e.target.reset();
+        displaySlots();
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Booking failed. Please try again.');
+      }
+    });
+
+    async function displaySlots() {
+      const container = document.getElementById('slotAvailability');
+      container.innerHTML = '';
+
+      const dateRanges = ['Feb19-Feb26', 'Feb27-Mar6'];
+      
+      for (const range of dateRanges) {
+        const snapshot = await db.child(range).once('value');
+        const data = snapshot.val() || {};
+
+        const rangeDiv = document.createElement('div');
+        rangeDiv.innerHTML = `
+          <h3>${range.replace('-', ' - ')}</h3>
+          ${Object.entries(data).map(([day, roles]) => `
+            <div class="slot-item">
+              <div class="slot-details">
+                <div class="slot-day">${day}</div>
+                ${Object.entries(roles).map(([role, details]) => `
+                  <div class="slot-role">
+                    ${role}: 
+                    <a href="https://wa.me/${details.number}" 
+                       target="_blank"
+                       class="whatsapp-link">
+                      <i class="fab fa-whatsapp"></i>
+                      ${details.name}
+                    </a>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `).join('')}
+        `;
+        
+        container.appendChild(rangeDiv);
+      }
+    }
+
+    window.onload = displaySlots;
+  </script>
+  <script>
+    /* background animation */
+    const STAR_COLOR = '#fff';
+    const STAR_SIZE = 3;
+    const STAR_MIN_SCALE = 0.2;
+    const OVERFLOW_THRESHOLD = 50;
+    const STAR_COUNT = (window.innerWidth + window.innerHeight) / 8;
+    
+    const canvas = document.querySelector('canvas'),
+          context = canvas.getContext('2d');
+    
+    let scale = 1,
+        width,
+        height;
+    
+    let stars = [];
+    
+    let pointerX,
+        pointerY;
+    
+    let velocity = { x: 0, y: 0, tx: 0, ty: 0, z: 0.0005 };
+    
+    let touchInput = false;
+    
+    generate();
+    resize();
+    step();
+    
+    window.onresize = resize;
+    canvas.onmousemove = onMouseMove;
+    canvas.ontouchmove = onTouchMove;
+    canvas.ontouchend = onMouseLeave;
+    document.onmouseleave = onMouseLeave;
+    
+    function generate() {
+      for (let i = 0; i < STAR_COUNT; i++) {
+        stars.push({
+          x: 0,
+          y: 0,
+          z: STAR_MIN_SCALE + Math.random() * (1 - STAR_MIN_SCALE)
+        });
+      }
+    }
+    
+    function placeStar(star) {
+      star.x = Math.random() * width;
+      star.y = Math.random() * height;
+    }
+    
+    function recycleStar(star) {
+      let direction = 'z';
+      let vx = Math.abs(velocity.x),
+          vy = Math.abs(velocity.y);
+    
+      if (vx > 1 || vy > 1) {
+        let axis;
+        if (vx > vy) {
+          axis = Math.random() < vx / (vx + vy) ? 'h' : 'v';
+        } else {
+          axis = Math.random() < vy / (vx + vy) ? 'v' : 'h';
+        }
+    
+        if (axis === 'h') {
+          direction = velocity.x > 0 ? 'l' : 'r';
+        } else {
+          direction = velocity.y > 0 ? 't' : 'b';
+        }
+      }
+      
+      star.z = STAR_MIN_SCALE + Math.random() * (1 - STAR_MIN_SCALE);
+    
+      if (direction === 'z') {
+        star.z = 0.1;
+        star.x = Math.random() * width;
+        star.y = Math.random() * height;
+      } else if (direction === 'l') {
+        star.x = -OVERFLOW_THRESHOLD;
+        star.y = height * Math.random();
+      } else if (direction === 'r') {
+        star.x = width + OVERFLOW_THRESHOLD;
+        star.y = height * Math.random();
+      } else if (direction === 't') {
+        star.x = width * Math.random();
+        star.y = -OVERFLOW_THRESHOLD;
+      } else if (direction === 'b') {
+        star.x = width * Math.random();
+        star.y = height + OVERFLOW_THRESHOLD;
+      }
+    }
+    
+    function resize() {
+      scale = window.devicePixelRatio || 1;
+      width = window.innerWidth * scale;
+      height = window.innerHeight * scale;
+      canvas.width = width;
+      canvas.height = height;
+      stars.forEach(placeStar);
+    }
+    
+    function step() {
+      context.clearRect(0, 0, width, height);
+      update();
+      render();
+      requestAnimationFrame(step);
+    }
+    
+    function update() {
+      velocity.tx *= 0.5;
+      velocity.ty *= 0.5;
+      velocity.x += (velocity.tx - velocity.x) * 0.8;
+      velocity.y += (velocity.ty - velocity.y) * 0.8;
+    
+      stars.forEach((star) => {
+        star.x += velocity.x * star.z;
+        star.y += velocity.y * star.z;
+        star.x += (star.x - width / 2) * velocity.z * star.z;
+        star.y += (star.y - height / 2) * velocity.z * star.z;
+        star.z += velocity.z;
+    
+        if (
+          star.x < -OVERFLOW_THRESHOLD ||
+          star.x > width + OVERFLOW_THRESHOLD ||
+          star.y < -OVERFLOW_THRESHOLD ||
+          star.y > height + OVERFLOW_THRESHOLD
+        ) {
+          recycleStar(star);
+        }
+      });
+    }
+    
+    function render() {
+      stars.forEach((star) => {
+        context.beginPath();
+        context.lineCap = 'round';
+        context.lineWidth = STAR_SIZE * star.z * scale;
+        context.globalAlpha = 0.5 + 0.5 * Math.random();
+        context.strokeStyle = STAR_COLOR;
+        context.beginPath();
+        context.moveTo(star.x, star.y);
+    
+        let tailX = velocity.x * 2,
+            tailY = velocity.y * 2;
+    
+        if (Math.abs(tailX) < 0.1) tailX = 0.5;
+        if (Math.abs(tailY) < 0.1) tailY = 0.5;
+    
+        context.lineTo(star.x + tailX, star.y + tailY);
+        context.stroke();
+      });
+    }
+    
+    function movePointer(x, y) {
+      if (typeof pointerX === 'number' && typeof pointerY === 'number') {
+        let ox = x - pointerX,
+            oy = y - pointerY;
+        velocity.tx = velocity.tx + (ox / (8 * scale)) * (touchInput ? 1 : -1);
+        velocity.ty = velocity.ty + (oy / (8 * scale)) * (touchInput ? 1 : -1);
+      }
+      pointerX = x;
+      pointerY = y;
+    }
+    
+    function onMouseMove(event) {
+      touchInput = false;
+      movePointer(event.clientX, event.clientY);
+    }
+    
+    function onTouchMove(event) {
+      touchInput = true;
+      movePointer(event.touches[0].clientX, event.touches[0].clientY, true);
+      event.preventDefault();
+    }
+    
+    function onMouseLeave() {
+      pointerX = null;
+      pointerY = null;
+    }
+  </script>
 </body>
 </html>
