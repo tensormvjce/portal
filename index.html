@@ -258,7 +258,7 @@
           <label for="dateRangeSelect">Date Range</label>
           <select id="dateRangeSelect" required>
             <option value="" disabled selected>Select dates</option>
-            <option value="Mar9-Mar16">Mar 9 - Mar 16, 2025</option>
+            <option value="Mar9-Mar16">Mar 9 - Mar 15, 2025</option>
             <option value="Mar16-Mar23">Mar 16 - Mar 23, 2025</option>
           </select>
         </div>
@@ -436,7 +436,7 @@
       const container = document.getElementById('slotAvailability');
       container.innerHTML = '';
 
-      const dateRangeKeys = ['Mar9-Mar16', 'Mar16-Mar23'];
+      const dateRangeKeys = ['Mar9-Mar15', 'Mar16-Mar23'];
       
       // Loop through each date range
       for (const range of dateRangeKeys) {
