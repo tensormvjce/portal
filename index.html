@@ -4,11 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tensor Portal</title>
+  <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
+    /* Import fonts */
     @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100..700;1,100..700&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&display=swap');
+    
+    /* Color variables */
     :root {
       --primary: #6366f1;
       --background: #0f172a;
@@ -16,6 +19,7 @@
       --text: #f8fafc;
     }
 
+    /* Reset styles */
     * {
       margin: 0;
       padding: 0;
@@ -33,7 +37,7 @@
       position: relative;
     }
 
-    /* Canvas styles so that it sits behind the content */
+    /* Background canvas */
     canvas {
       position: fixed;
       top: 0;
@@ -43,6 +47,7 @@
       z-index: -1;
     }
 
+    /* Layout */
     .container {
       max-width: 1200px;
       margin: 0 auto;
@@ -50,45 +55,34 @@
       gap: 2rem;
       grid-template-columns: 1fr 1fr;
     }
-    
-    /* .slot-item {
+
+    /* Card components */
+    .card {
+      background: rgba(30, 41, 59, 0.8);  
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Slot item styling */
+    .slot-item {
       padding: 1rem;
-      background: #334155;
+      background: rgba(51, 65, 85, 0.8);   
       border-radius: 0.5rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
-    }
-    .card {
-      background: var(--surface);
-      border-radius: 1rem;
-      padding: 1.5rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    } */
+      margin-bottom: 0.75rem;
+    } 
 
-     .card {
-  background: rgba(30, 41, 59, 0.8);  
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.slot-item {
-  padding: 1rem;
-  background: rgba(51, 65, 85, 0.8);   
-  border-radius: 0.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-} 
-
-
+    /* Form card positioning */
     .form-card {
       position: sticky;
       top: 2rem;
       height: fit-content;
     }
 
+    /* Title styling */
     .title {
       display: flex;
       align-items: center;
@@ -100,6 +94,7 @@
       height: 50px;
     }
 
+    /* Form elements */
     .form-group {
       margin-bottom: 1.5rem;
     }
@@ -143,6 +138,7 @@
       opacity: 0.9;
     }
 
+    /* Alert message */
     .alert {
       padding: 1rem;
       background: #059669;
@@ -152,15 +148,27 @@
       display: none;
     }
 
+    /* Slots section */
     .slots-list {
       display: grid;
       gap: 1rem;
     }
 
+    .slots-list h3 {
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+    }
 
+    /* Slot details */
     .slot-details {
       display: grid;
       gap: 0.25rem;
+      width: 100%;
+    }
+
+    .slot-day {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
     }
 
     .slot-date {
@@ -168,6 +176,7 @@
       color: #94a3b8;
     }
 
+    /* WhatsApp link */
     .whatsapp-link {
       color: var(--primary);
       text-decoration: none;
@@ -180,6 +189,17 @@
       text-decoration: underline;
     }
 
+    /* No bookings message */
+    .no-bookings {
+      text-align: center;
+      color: #94a3b8;
+      padding: 1rem;
+      background: rgba(51, 65, 85, 0.4);
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Responsive layout */
     @media (max-width: 768px) {
       .container {
         grid-template-columns: 1fr;
@@ -189,34 +209,37 @@
         position: static;
       }
     }
-    .credits{
+
+    /* Footer credits */
+    .credits {
       display: flex;
       justify-content: center;
       align-items: center;
       padding: 25px;
-      color: rgba(150, 150, 150, 0.801);
+      color: rgba(177, 175, 175, 0.801);
     }
+
     .credits footer p {
-      font-size: 10px;
+      font-size: 13px;
       font-family: "Josefin Sans", serif;
-      font-optical-sizing: auto;
       font-weight: 400;
-      font-style: normal;
     }
-    .credits a{
+
+    .credits a {
       text-decoration: none;
       font-family: "Cinzel", serif;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  font-style: normal;
-      color: rgb(97, 42, 199);
+      color: rgb(255, 255, 255);
       font-size: 11px;
     }
   </style>
 </head>
 <body>
+  <!-- Background animation canvas -->
   <canvas></canvas>
+  
+  <!-- Main content container -->
   <div class="container">
+    <!-- Booking form card -->
     <div class="card form-card">
       <div class="title">
         <img src="logo_white.png" alt="Tensor Logo">
@@ -235,8 +258,8 @@
           <label for="dateRangeSelect">Date Range</label>
           <select id="dateRangeSelect" required>
             <option value="" disabled selected>Select dates</option>
-            <option value="Feb19-Feb26">Feb 19 - Feb 26</option>
-            <option value="Feb27-Mar6">Feb 27 - Mar 6</option>
+            <option value="Mar9-Mar16">Mar 9 - Mar 16, 2025</option>
+            <option value="Mar16-Mar23">Mar 16 - Mar 23, 2025</option>
           </select>
         </div>
 
@@ -244,9 +267,7 @@
           <label for="daySelect">Preferred Day</label>
           <select id="daySelect" required>
             <option value="" disabled selected>Choose day</option>
-            <option value="Wednesday">Wednesday</option>
-            <option value="Friday">Friday</option>
-            <option value="Sunday">Sunday</option>
+            <!-- Day options populate dynamically based on selected date range -->
           </select>
         </div>
 
@@ -268,19 +289,29 @@
       </form>
     </div>
 
+    <!-- Bookings display card -->
     <div class="card">
-        <center><h2>Bookings: </h2></center> <br>
-      <div class="slots-list" id="slotAvailability"></div>
+      <h2 style="text-align: center; margin-bottom: 1.5rem;">Bookings</h2>
+      <div class="slots-list" id="slotAvailability">
+        <!-- Slots get populated here dynamically -->
+      </div>
     </div>
   </div>
+  
+  <!-- Footer -->
   <div class="credits">
     <footer>
-      <p>Designed and developed by: <a href="https://www.linkedin.com/in/srikar-t-118581286/">Srikar</a></p></footer>
+      <p>Designed and developed by: <a href="https://www.linkedin.com/in/srikar-t-118581286/">Srikar</a></p>
+    </footer>
   </div>
 
+  <!-- Firebase scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/7.14.1-0/firebase-app.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/7.14.1-0/firebase-database.js"></script>
+  
+  <!-- Main application script -->
   <script>
+    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyBSbonwVE3PPXIIrSrvrB75u2AQ_B_Tni4",
       authDomain: "discraft-c1c41.firebaseapp.com",
@@ -291,26 +322,85 @@
       appId: "1:525620150766:web:a426e68d206c68764aceff"
     };
 
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref("slotBookings");
 
+    // Current date - March 8, 2025
+    const currentDate = new Date(2025, 2, 8); // Month is 0-indexed (2 = March)
+    
+    // Define date ranges and calculate days
+    const dateRanges = {
+      'Mar9-Mar16': {
+        start: new Date(2025, 2, 9),
+        end: new Date(2025, 2, 16),
+        days: {
+          'Sunday': new Date(2025, 2, 9),
+          'Wednesday': new Date(2025, 2, 12),
+          'Friday': new Date(2025, 2, 14)
+        }
+      },
+      'Mar16-Mar23': {
+        start: new Date(2025, 2, 16),
+        end: new Date(2025, 2, 23),
+        days: {
+          'Sunday': new Date(2025, 2, 16),
+          'Wednesday': new Date(2025, 2, 19),
+          'Friday': new Date(2025, 2, 21)
+        }
+      }
+    };
+
+    // Format date helper function
+    function formatDate(date) {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    // Update day options when date range changes
+    document.getElementById('dateRangeSelect').addEventListener('change', function(e) {
+      const rangeKey = e.target.value;
+      const daySelect = document.getElementById('daySelect');
+      
+      // Clear existing options except the first one
+      while (daySelect.options.length > 1) {
+        daySelect.remove(1);
+      }
+      
+      // Add options for the selected range
+      const range = dateRanges[rangeKey];
+      for (const [dayName, date] of Object.entries(range.days)) {
+        const option = document.createElement('option');
+        option.value = dayName;
+        option.textContent = `${dayName} (${formatDate(date)})`;
+        daySelect.appendChild(option);
+      }
+    });
+
+    // Handle form submission
     document.getElementById('slotBookingForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
+      const dateRange = document.getElementById('dateRangeSelect').value;
+      const day = document.getElementById('daySelect').value;
+      
+      // Gather form data
       const formData = {
         name: document.getElementById('userName').value.trim(),
-        dateRange: document.getElementById('dateRangeSelect').value,
-        day: document.getElementById('daySelect').value,
+        dateRange: dateRange,
+        day: day,
+        date: formatDate(dateRanges[dateRange].days[day]),
         role: document.getElementById('roleSelect').value,
         number: document.getElementById('number').value.trim()
       };
 
+      // Validate form data
       if (Object.values(formData).some(v => !v)) {
         alert('Please fill all fields');
         return;
       }
 
       try {
+        // Check if slot is already taken
         const slotRef = db.child(`${formData.dateRange}/${formData.day}/${formData.role}`);
         const snapshot = await slotRef.once('value');
         
@@ -319,16 +409,20 @@
           return;
         }
 
+        // Save booking to Firebase
         await slotRef.set({
           name: formData.name,
-          number: formData.number
+          number: formData.number,
+          date: formData.date
         });
 
+        // Show success message
         document.querySelector('.alert').style.display = 'block';
         setTimeout(() => {
           document.querySelector('.alert').style.display = 'none';
         }, 3000);
 
+        // Reset form and refresh display
         e.target.reset();
         displaySlots();
       } catch (error) {
@@ -337,47 +431,79 @@
       }
     });
 
+    // Display all booked slots
     async function displaySlots() {
       const container = document.getElementById('slotAvailability');
       container.innerHTML = '';
 
-      const dateRanges = ['Feb19-Feb26', 'Feb27-Mar6'];
+      const dateRangeKeys = ['Mar9-Mar16', 'Mar16-Mar23'];
       
-      for (const range of dateRanges) {
+      // Loop through each date range
+      for (const range of dateRangeKeys) {
         const snapshot = await db.child(range).once('value');
         const data = snapshot.val() || {};
-
+        
         const rangeDiv = document.createElement('div');
-        rangeDiv.innerHTML = `
-          <h3>${range.replace('-', ' - ')}</h3>
-          ${Object.entries(data).map(([day, roles]) => `
-            <div class="slot-item">
+        rangeDiv.innerHTML = `<h3>${range.replace('-', ' - ')}</h3>`;
+        
+        // Check if there are any bookings in this range
+        if (Object.keys(data).length === 0) {
+          const noBookingsDiv = document.createElement('div');
+          noBookingsDiv.className = 'no-bookings';
+          noBookingsDiv.textContent = 'No bookings yet for this period';
+          rangeDiv.appendChild(noBookingsDiv);
+        } else {
+          // For each day with bookings
+          Object.entries(data).forEach(([day, roles]) => {
+            const dayDate = dateRanges[range].days[day] 
+              ? formatDate(dateRanges[range].days[day]) 
+              : '';
+              
+            const slotItemDiv = document.createElement('div');
+            slotItemDiv.className = 'slot-item';
+            
+            let rolesHTML = '';
+            Object.entries(roles).forEach(([role, details]) => {
+              rolesHTML += `
+                <div class="slot-role">
+                  ${role}: 
+                  <a href="https://wa.me/${details.number}" 
+                     target="_blank"
+                     class="whatsapp-link">
+                    <i class="fab fa-whatsapp"></i>
+                    ${details.name}
+                  </a>
+                </div>
+              `;
+            });
+            
+            slotItemDiv.innerHTML = `
               <div class="slot-details">
-                <div class="slot-day">${day}</div>
-                ${Object.entries(roles).map(([role, details]) => `
-                  <div class="slot-role">
-                    ${role}: 
-                    <a href="https://wa.me/${details.number}" 
-                       target="_blank"
-                       class="whatsapp-link">
-                      <i class="fab fa-whatsapp"></i>
-                      ${details.name}
-                    </a>
-                  </div>
-                `).join('')}
+                <div class="slot-day">${day} (${dayDate})</div>
+                ${rolesHTML}
               </div>
-            </div>
-          `).join('')}
-        `;
+            `;
+            
+            rangeDiv.appendChild(slotItemDiv);
+          });
+        }
         
         container.appendChild(rangeDiv);
       }
     }
 
-    window.onload = displaySlots;
+    // Initialize the page
+    window.onload = function() {
+      displaySlots();
+    };
   </script>
+  
+  <!-- Background animation script -->
   <script>
-    /* background animation */
+    /* 
+    * Background animation with animated stars
+    * Creates a responsive starfield effect with mouse interaction
+    */
     const STAR_COLOR = '#fff';
     const STAR_SIZE = 3;
     const STAR_MIN_SCALE = 0.2;
@@ -392,24 +518,11 @@
         height;
     
     let stars = [];
-    
-    let pointerX,
-        pointerY;
-    
+    let pointerX, pointerY;
     let velocity = { x: 0, y: 0, tx: 0, ty: 0, z: 0.0005 };
-    
     let touchInput = false;
     
-    generate();
-    resize();
-    step();
-    
-    window.onresize = resize;
-    canvas.onmousemove = onMouseMove;
-    canvas.ontouchmove = onTouchMove;
-    canvas.ontouchend = onMouseLeave;
-    document.onmouseleave = onMouseLeave;
-    
+    // Create initial stars
     function generate() {
       for (let i = 0; i < STAR_COUNT; i++) {
         stars.push({
@@ -420,11 +533,13 @@
       }
     }
     
+    // Position a star on the canvas
     function placeStar(star) {
       star.x = Math.random() * width;
       star.y = Math.random() * height;
     }
     
+    // Reset star when it goes off-screen
     function recycleStar(star) {
       let direction = 'z';
       let vx = Math.abs(velocity.x),
@@ -466,6 +581,7 @@
       }
     }
     
+    // Handle window resize
     function resize() {
       scale = window.devicePixelRatio || 1;
       width = window.innerWidth * scale;
@@ -475,6 +591,7 @@
       stars.forEach(placeStar);
     }
     
+    // Animation loop
     function step() {
       context.clearRect(0, 0, width, height);
       update();
@@ -482,6 +599,7 @@
       requestAnimationFrame(step);
     }
     
+    // Update star positions
     function update() {
       velocity.tx *= 0.5;
       velocity.ty *= 0.5;
@@ -495,6 +613,7 @@
         star.y += (star.y - height / 2) * velocity.z * star.z;
         star.z += velocity.z;
     
+        // Check if star is offscreen
         if (
           star.x < -OVERFLOW_THRESHOLD ||
           star.x > width + OVERFLOW_THRESHOLD ||
@@ -506,6 +625,7 @@
       });
     }
     
+    // Draw stars on canvas
     function render() {
       stars.forEach((star) => {
         context.beginPath();
@@ -527,6 +647,7 @@
       });
     }
     
+    // Track pointer movement
     function movePointer(x, y) {
       if (typeof pointerX === 'number' && typeof pointerY === 'number') {
         let ox = x - pointerX,
@@ -538,6 +659,7 @@
       pointerY = y;
     }
     
+    // Event handlers
     function onMouseMove(event) {
       touchInput = false;
       movePointer(event.clientX, event.clientY);
@@ -553,6 +675,18 @@
       pointerX = null;
       pointerY = null;
     }
+    
+    // Initialize animation
+    generate();
+    resize();
+    step();
+    
+    // Event listeners
+    window.onresize = resize;
+    canvas.onmousemove = onMouseMove;
+    canvas.ontouchmove = onTouchMove;
+    canvas.ontouchend = onMouseLeave;
+    document.onmouseleave = onMouseLeave;
   </script>
 </body>
 </html>
