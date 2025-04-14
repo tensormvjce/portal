@@ -604,8 +604,8 @@
           <label for="dateRangeSelect">Date Range</label>
           <select id="dateRangeSelect" required>
             <option value="" disabled selected>Select week</option>
-            <option value="Mar16-Mar23">Week 1: Mar 16 - Mar 23, 2025</option>
-            <option value="Mar23-Mar30">Week 2: Mar 23 - Mar 30, 2025</option>
+            <option value="Apr14-Apr21">Week 1: Apr 14 - Apr 21, 2025</option>
+            <option value="Apr21-Apr28">Week 2: Apr 21 - Apr 28, 2025</option>
           </select>
         </div>
 
@@ -683,25 +683,25 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref("slotBookings");
 
-    // Current date - March 15, 2025 (to make Mar16 the starting week)
-    const currentDate = new Date(2025, 2, 15); // Month is 0-indexed (2 = March)
+    // Current date - April 14, 2025 (to make Apr14 the starting week)
+    const currentDate = new Date(2025, 3, 14); // Month is 0-indexed (3 = April)
     
     // Define date ranges and calculate days
     const dateRanges = {
-      'Mar16-Mar23': {
-        start: new Date(2025, 2, 16),
-        end: new Date(2025, 2, 23),
+      'Apr14-Apr21': {
+        start: new Date(2025, 3, 14),
+        end: new Date(2025, 3, 21),
         days: {
-          'Sunday': new Date(2025, 2, 16),
-          'Friday': new Date(2025, 2, 21)
+          'Sunday': new Date(2025, 3, 14),
+          'Friday': new Date(2025, 3, 18)
         }
       },
-      'Mar23-Mar30': {
-        start: new Date(2025, 2, 23),
-        end: new Date(2025, 2, 30),
+      'Apr21-Apr28': {
+        start: new Date(2025, 3, 21),
+        end: new Date(2025, 3, 28),
         days: {
-          'Sunday': new Date(2025, 2, 23),
-          'Friday': new Date(2025, 2, 28)
+          'Sunday': new Date(2025, 3, 20),
+          'Friday': new Date(2025, 3, 26)
         }
       }
     };
@@ -844,7 +844,7 @@
       }
       
       try {
-        const dateRangeKeys = ['Mar16-Mar23', 'Mar23-Mar30'];
+        const dateRangeKeys = ['Apr14-Apr21', 'Apr21-Apr28'];
         container.innerHTML = '';
         
         for (const range of dateRangeKeys) {
