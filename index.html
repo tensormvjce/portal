@@ -604,8 +604,8 @@
           <label for="dateRangeSelect">Date Range</label>
           <select id="dateRangeSelect" required>
             <option value="" disabled selected>Select week</option>
-            <option value="Apr21-Apr27">Week 1: Apr 21 - Apr 27, 2025</option>
-            <option value="Apr28-May04">Week 2: Apr 28 - May 04, 2025</option>
+            <option value="Apr28-May04">Week 1: Apr 28 - May 04, 2025</option>
+            <option value="May05-May11">Week 2: May 05 - May 11, 2025</option>
           </select>
         </div>
 
@@ -688,20 +688,20 @@
     
     // Define date ranges and calculate days
     const dateRanges = {
-      'Apr21-Apr27': {
-        start: new Date(2025, 3, 21),
-        end: new Date(2025, 3, 27),
-        days: {
-          'Friday': new Date(2025, 3, 25),
-          'Sunday': new Date(2025, 3, 27)
-        }
-      },
       'Apr28-May04': {
         start: new Date(2025, 3, 28),
         end: new Date(2025, 4, 4),
         days: {
           'Friday': new Date(2025, 4, 2),
           'Sunday': new Date(2025, 4, 4)
+        }
+      },
+      'May05-May11': {
+        start: new Date(2025, 4, 5),
+        end: new Date(2025, 4, 11),
+        days: {
+          'Friday': new Date(2025, 4, 9),
+          'Sunday': new Date(2025, 4, 11)
         }
       }
     };
