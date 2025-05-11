@@ -604,8 +604,8 @@
           <label for="dateRangeSelect">Date Range</label>
           <select id="dateRangeSelect" required>
             <option value="" disabled selected>Select week</option>
-            <option value="Apr28-May04">Week 1: Apr 28 - May 04, 2025</option>
-            <option value="May05-May11">Week 2: May 05 - May 11, 2025</option>
+            <option value="May12-May18">Week 1: May 12 - May 18, 2025</option>
+            <option value="May19-May25">Week 2: May 19 - May 25, 2025</option>
           </select>
         </div>
 
@@ -684,24 +684,24 @@
     const db = firebase.database().ref("slotBookings");
 
     // Current date - April 28, 2025 (to make Apr21 the starting week)
-    const currentDate = new Date(2025, 3, 28); // Month is 0-indexed (3 = April)
+    const currentDate = new Date(2025, 5, 18); // Month is 0-indexed (5 = May)
     
     // Define date ranges and calculate days
     const dateRanges = {
-      'Apr28-May04': {
-        start: new Date(2025, 3, 28),
-        end: new Date(2025, 4, 4),
+      'May12-May18': {
+        start: new Date(2025, 5, 12),
+        end: new Date(2025, 5, 18),
         days: {
-          'Friday': new Date(2025, 4, 2),
-          'Sunday': new Date(2025, 4, 4)
+          'Friday': new Date(2025, 4, 16),
+          'Sunday': new Date(2025, 4, 18)
         }
       },
-      'May05-May11': {
-        start: new Date(2025, 4, 5),
-        end: new Date(2025, 4, 11),
+      'May19-May25': {
+        start: new Date(2025, 5, 19),
+        end: new Date(2025, 5, 25),
         days: {
-          'Friday': new Date(2025, 4, 9),
-          'Sunday': new Date(2025, 4, 11)
+          'Friday': new Date(2025, 4, 23),
+          'Sunday': new Date(2025, 4, 25)
         }
       }
     };
@@ -844,7 +844,7 @@
       }
       
       try {
-        const dateRangeKeys = ['Apr28-May04', 'May05-May11'];
+        const dateRangeKeys = ['May12-May18', 'May19-May25'];
         container.innerHTML = '';
         
         for (const range of dateRangeKeys) {
