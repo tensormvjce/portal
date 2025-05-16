@@ -684,24 +684,24 @@
     const db = firebase.database().ref("slotBookings");
 
     // Current date - April 28, 2025 (to make Apr21 the starting week)
-    const currentDate = new Date(2025, 5, 18); // Month is 0-indexed (5 = May)
+    const currentDate = new Date(2025, 3, 28); // Month is 0-indexed (3 = April)
     
     // Define date ranges and calculate days
     const dateRanges = {
       'May12-May18': {
-        start: new Date(2025, 5, 12),
-        end: new Date(2025, 5, 18),
+        start: new Date(2025, 4, 12), // May 12, 2025
+        end: new Date(2025, 4, 18),   // May 18, 2025
         days: {
-          'Friday': new Date(2025, 4, 16),
-          'Sunday': new Date(2025, 4, 18)
+          'Friday': new Date(2025, 4, 16),  // May 16, 2025
+          'Sunday': new Date(2025, 4, 18)   // May 18, 2025
         }
       },
       'May19-May25': {
-        start: new Date(2025, 5, 19),
-        end: new Date(2025, 5, 25),
+        start: new Date(2025, 4, 19), // May 19, 2025
+        end: new Date(2025, 4, 25),   // May 25, 2025
         days: {
-          'Friday': new Date(2025, 4, 23),
-          'Sunday': new Date(2025, 4, 25)
+          'Friday': new Date(2025, 4, 23),  // May 23, 2025
+          'Sunday': new Date(2025, 4, 25)   // May 25, 2025
         }
       }
     };
@@ -722,12 +722,14 @@
       }
       
       // Add options for the selected range
-      const range = dateRanges[rangeKey];
-      for (const [dayName, date] of Object.entries(range.days)) {
-        const option = document.createElement('option');
-        option.value = dayName;
-        option.textContent = `${dayName} (${formatDate(date)})`;
-        daySelect.appendChild(option);
+      if (rangeKey && dateRanges[rangeKey]) {
+        const range = dateRanges[rangeKey];
+        for (const [dayName, date] of Object.entries(range.days)) {
+          const option = document.createElement('option');
+          option.value = dayName;
+          option.textContent = `${dayName} (${formatDate(date)})`;
+          daySelect.appendChild(option);
+        }
       }
     });
 
@@ -802,13 +804,15 @@
         const slotRef = db.child(`${formData.dateRange}/${formData.day}/${formData.role}`);
         const snapshot = await slotRef.once('value');
         
-        if (snapshot.exists()) {
-          showToast('This slot is already taken', 'warning');
+        const currentBookings = snapshot.val() || {};
+        const bookingCount = Object.keys(currentBookings).length;
+        if (bookingCount >= 3) {
+          showToast('Maximum bookings reached for this slot', 'error');
           submitButton.classList.remove('loading');
           return;
         }
         
-        await slotRef.set({
+        await slotRef.push({
           name: formData.name,
           number: formData.number,
           date: formatDate(dateRanges[formData.dateRange].days[formData.day])
@@ -830,18 +834,13 @@
     async function displaySlots() {
       const container = document.getElementById('slotAvailability');
       
-      // Show loading state only for bookings
+      // Show loading state
       container.innerHTML = `
         <div class="firebase-loading">
           <div class="spinner"></div>
           <div class="message">Loading bookings data...</div>
         </div>
       `;
-      
-      // Initialize Firebase here instead of in window.onload
-      if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-      }
       
       try {
         const dateRangeKeys = ['May12-May18', 'May19-May25'];
@@ -870,20 +869,19 @@
               slotItemDiv.className = 'slot-item';
               
               let rolesHTML = '';
-              Object.entries(roles).forEach(([role, details]) => {
+              Object.entries(roles).forEach(([role, bookings]) => {
                 const roleBadgeClass = role.toLowerCase() === 'content' ? 'content' : 'design';
-                rolesHTML += `
-                  <div class="slot-role">
-                    <span class="category-badge ${roleBadgeClass}">${role}</span>
-                    <a href="https://wa.me/${details.number}" 
-                       target="_blank"
-                       class="whatsapp-link"
-                       title="Chat on WhatsApp">
-                      <i class="fab fa-whatsapp"></i>
-                      ${details.name}
-                    </a>
-                  </div>
-                `;
+                Object.values(bookings).forEach(details => {
+                  rolesHTML += `
+                    <div class="slot-role">
+                      <span class="category-badge ${roleBadgeClass}">${role}</span>
+                      <a href="https://wa.me/${details.number || 'Slot Empty'}" target="_blank" class="whatsapp-link" title="Chat on WhatsApp">
+                        <i class="fab fa-whatsapp"></i> 
+                        ${details.name || 'Slot Empty'}
+                      </a>
+                    </div>
+                  `;
+                });
               });
               
               slotItemDiv.innerHTML = `
@@ -917,7 +915,6 @@
 
     // Initialize the page
     window.onload = function() {
-      // Remove the full page loader initialization
       displaySlots().catch(error => {
         console.error('Error loading slots:', error);
         document.getElementById('slotAvailability').innerHTML = `
