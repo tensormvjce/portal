@@ -447,8 +447,8 @@
           <label for="dateRangeSelect">Date Range</label>
           <select id="dateRangeSelect" required>
             <option value="" disabled selected>Select week</option>
-            <option value="May12-May18">Week 1: May 26 - June 1, 2025</option>
-            <option value="May19-May25">Week 2: June 2 - June 8, 2025</option>
+            <option value="May26-Jun1">Week 1: May 26 - Jun 1, 2025</option>
+            <option value="Jun2-Jun8">Week 2: Jun 2 - Jun 8, 2025</option>
           </select>
         </div>
 
@@ -572,8 +572,8 @@
 
       if (e.target.value === 'Sunday') {
         roleSelect.innerHTML = `
-          <option value="Content">Content</option>
-          <option value="Design">Design</option>
+          <option value="Content">Content (3 slots)</option>
+          <option value="Design">Design (3 slots)</option>
         `;
       } else if (e.target.value === 'Wednesday') {
         roleSelect.innerHTML = `
