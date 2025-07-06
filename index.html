@@ -447,8 +447,8 @@
           <label for="dateRangeSelect">Date Range</label>
           <select id="dateRangeSelect" required>
             <option value="" disabled selected>Select week</option>
-            <option value="Jun9-Jun15">Week 1: Jun 9 - Jun 15, 2025</option>
-            <option value="Jun16-Jun22">Week 2: Jun 16 - Jun 22, 2025</option>
+            <option value="Jul7-Jul13">Week 1: Jul 7 - Jul 13, 2025</option>
+            <option value="Jul14-Jul20">Week 2: Jul 14 - Jul 20, 2025</option>
           </select>
         </div>
 
@@ -515,24 +515,24 @@
     const db = firebase.database().ref("bookings");
 
     const dateRanges = {
-      'Jun9-Jun15': {
-        start: new Date(2025, 5, 9),
-        end: new Date(2025, 5, 15),
+      'Jul7-Jul13': {
+        start: new Date(2025, 6, 7),
+        end: new Date(2025, 6, 13),
         days: {
-          'Wednesday': new Date(2025, 5, 11),
+          'Wednesday': new Date(2025, 6, 9),
           'Sunday': {
-            date: new Date(2025, 5, 15),
+            date: new Date(2025, 6, 13),
             postType: 'text'
           }
         }
       },
-      'Jun16-Jun22': {
-        start: new Date(2025, 5, 16),
-        end: new Date(2025, 5, 22),
+      'Jul14-Jul20': {
+        start: new Date(2025, 6, 14),
+        end: new Date(2025, 6, 20),
         days: {
-          'Wednesday': new Date(2025, 5, 18),
+          'Wednesday': new Date(2025, 6, 16),
           'Sunday': {
-            date: new Date(2025, 5, 22),
+            date: new Date(2025, 6, 20),
             postType: 'video'
           }
         }
@@ -684,7 +684,7 @@
       `;
       
       try {
-        const dateRangeKeys = ['Jun9-Jun15', 'Jun16-Jun22'];
+        const dateRangeKeys = ['Jul7-Jul13', 'Jul14-Jul20'];
         container.innerHTML = '';
         
         for (const range of dateRangeKeys) {
