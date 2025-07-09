@@ -997,6 +997,8 @@
         const weekDiv = document.createElement('div');
         weekDiv.style.marginBottom = '2rem';
         weekDiv.innerHTML = `<h3>Week ${i+1}: ${rangeKey.replace('-', ' - ')}</h3>`;
+        // Collect all slot divs for this week
+        const slots = [];
         Object.entries(rangeObj.days).forEach(([day, dayObj]) => {
           let roles = [];
           if (day === 'Sunday') {
@@ -1041,10 +1043,12 @@
                 <button type="submit" ${canAssign ? '' : 'disabled'} style="background:var(--primary-gradient);color:white;border:none;border-radius:6px;padding:0.5rem 1.2rem;font-weight:600;cursor:pointer;">Assign</button>
               </form>
             `;
-            assignTasksList.appendChild(slotDiv);
+            slots.push(slotDiv);
           });
         });
+        // Append week heading, then all slots for this week
         assignTasksList.appendChild(weekDiv);
+        slots.forEach(slotDiv => assignTasksList.appendChild(slotDiv));
       });
       // Assign form submit
       assignTasksList.querySelectorAll('.assignForm').forEach(form => {
