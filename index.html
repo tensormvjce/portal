@@ -426,6 +426,7 @@
 
   <canvas></canvas>
   
+  <div id="mainPortal">
   <div class="container">
     <div class="card form-card">
       <div class="title">
@@ -447,8 +448,8 @@
           <label for="dateRangeSelect">Date Range</label>
           <select id="dateRangeSelect" required>
             <option value="" disabled selected>Select week</option>
-            <option value="Jul7-Jul13">Week 1: Jul 7 - Jul 13, 2025</option>
-            <option value="Jul14-Jul20">Week 2: Jul 14 - Jul 20, 2025</option>
+              <option value="Jul7-Jul13">Week 1: Jul 7 - Jul 13, 2025</option>
+              <option value="Jul14-Jul20">Week 2: Jul 14 - Jul 20, 2025</option>
           </select>
         </div>
 
@@ -485,34 +486,111 @@
           <div class="spinner"></div>
           <div class="message">Loading bookings...</div>
         </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Admin Login Section (hidden by default) -->
+  <div id="adminLoginSection" style="display:none; min-height: 80vh; align-items: center; justify-content: center;">
+    <div class="card form-card" style="max-width: 400px; margin: 3rem auto;">
+      <div class="title" style="justify-content: center;">
+        <h1>Admin Login</h1>
+      </div>
+      <form id="adminLoginForm">
+        <div class="form-group">
+          <label for="adminEmail">Email</label>
+          <input type="email" id="adminEmail" placeholder="Enter admin email" required>
+        </div>
+        <div class="form-group">
+          <label for="adminPassword">Password</label>
+          <input type="password" id="adminPassword" placeholder="Enter password" required>
+        </div>
+        <button type="submit">
+          <span>Sign In</span>
+          <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+  <!-- Admin Dashboard Section (hidden by default) -->
+  <div id="adminDashboardSection" style="display:none;">
+    <nav style="background: var(--surface); padding: 1rem 2rem; display: flex; gap: 1rem; align-items: center; border-radius: var(--border-radius); margin: 2rem auto 1rem; max-width: 1200px;">
+      <button id="navMembers" style="background: var(--primary-gradient); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Members List</button>
+      <button id="navAssign" style="background: var(--surface-light); color: var(--text); border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Assign Tasks</button>
+      <div style="flex:1"></div>
+      <button id="adminLogoutBtn" style="background: var(--error); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Logout</button>
+    </nav>
+    <div id="adminMembersSection" class="container" style="display: block; max-width: 1200px; margin: 0 auto;">
+      <div class="card" style="min-width: 300px;">
+        <h2 style="margin-bottom: 1rem;">Content Team</h2>
+        <ul id="contentTeamList" style="list-style: none; padding: 0;"></ul>
+      </div>
+      <div class="card" style="min-width: 300px;">
+        <h2 style="margin-bottom: 1rem;">Design Team</h2>
+        <ul id="designTeamList" style="list-style: none; padding: 0;"></ul>
+      </div>
+      <div class="card form-card" style="min-width: 300px;">
+        <h2 style="margin-bottom: 1rem;">Add Member</h2>
+        <form id="addMemberForm">
+          <div class="form-group">
+            <label for="memberName">Name</label>
+            <input type="text" id="memberName" required>
+          </div>
+          <div class="form-group">
+            <label for="memberNumber">WhatsApp Number</label>
+            <input type="tel" id="memberNumber" required>
+          </div>
+          <div class="form-group">
+            <label for="memberTeam">Team</label>
+            <select id="memberTeam" required>
+              <option value="" disabled selected>Select team</option>
+              <option value="contentTeam">Content Team</option>
+              <option value="designTeam">Design Team</option>
+            </select>
+          </div>
+          <button type="submit">
+            <span>Add Member</span>
+            <i class="fas fa-plus" style="margin-left: 8px;"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+    <div id="adminAssignSection" class="container" style="display: none; max-width: 1200px; margin: 0 auto;">
+      <div class="card" style="width: 100%;">
+        <h2 style="margin-bottom: 1rem;">Assign Tasks</h2>
+        <div id="assignTasksList"></div>
       </div>
     </div>
   </div>
   
   <div class="credits">
     <footer>
-      <p>Designed and developed by: <a href="https://www.linkedin.com/in/srikar-t-118581286/">Srikar</a></p>
+      <p>Designed and developed by: <a href="https://www.linkedin.com/in/srikar-t-118581286/">Srikar</a> & <a href="https://www.linkedin.com/in/piratla-ankit-rama-datt/">Ankit</a></p>
     </footer>
   </div>
 
   <div class="toast-container"></div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/7.14.1-0/firebase-app.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/7.14.1-0/firebase-database.js"></script>
-  
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getDatabase, ref, get, set, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+
+    // Your new Firebase config
     const firebaseConfig = {
-      apiKey: "AIzaSyBSbonwVE3PPXIIrSrvrB75u2AQ_B_Tni4",
-      authDomain: "discraft-c1c41.firebaseapp.com",
-      databaseURL: "https://discraft-c1c41-default-rtdb.firebaseio.com",
-      projectId: "discraft-c1c41",
-      storageBucket: "discraft-c1c41.appspot.com",
-      messagingSenderId: "525620150766",
-      appId: "1:525620150766:web:a426e68d206c68764aceff"
+      apiKey: "AIzaSyB-PZMH9kvSziZepwpL2994IV9OZD5Uj-k",
+      authDomain: "tensor-portal.firebaseapp.com",
+      projectId: "tensor-portal",
+      storageBucket: "tensor-portal.appspot.com",
+      messagingSenderId: "860387540675",
+      appId: "1:860387540675:web:44acbeddd76e6c2e706c76",
+      measurementId: "G-P23J5L5DEX"
     };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database().ref("bookings");
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
 
     const dateRanges = {
       'Jul7-Jul13': {
@@ -645,27 +723,24 @@
       }
       
       try {
-        const slotRef = db.child(`${formData.dateRange}/${formData.day}/${formData.role}`);
-        const snapshot = await slotRef.once('value');
-        
-        const currentBookings = snapshot.val() || {};
+        const slotRef = ref(db, `bookings/${formData.dateRange}/${formData.day}/${formData.role}`);
+        const snapshot = await get(slotRef);
+        const currentBookings = snapshot.exists() ? snapshot.val() : {};
         if (Object.keys(currentBookings).length >= 3) {
           showToast('Maximum 3 slots filled', 'warning');
           submitButton.classList.remove('loading');
           return;
         }
-        
-        await slotRef.push().set({
+        const newBookingRef = push(slotRef);
+        await set(newBookingRef, {
           name: formData.name,
           number: formData.number,
           date: formatDate(dateRanges[formData.dateRange].days[formData.day].date || 
                 dateRanges[formData.dateRange].days[formData.day])
         });
-        
         showToast('Slot booked successfully!', 'success');
         e.target.reset();
         displaySlots();
-        
       } catch (error) {
         console.error('Error:', error);
         showToast('Booking failed. Please try again.', 'error');
@@ -682,19 +757,16 @@
           <div class="message">Loading bookings data...</div>
         </div>
       `;
-      
       try {
         const dateRangeKeys = ['Jul7-Jul13', 'Jul14-Jul20'];
         container.innerHTML = '';
-        
         for (const range of dateRangeKeys) {
-          const snapshot = await db.child(range).once('value');
-          const data = snapshot.val() || {};
-          
+          const rangeRef = ref(db, 'bookings/' + range);
+          const snapshot = await get(rangeRef);
+          const data = snapshot.exists() ? snapshot.val() : {};
           const rangeDiv = document.createElement('div');
           const weekNumber = dateRangeKeys.indexOf(range) + 1;
           rangeDiv.innerHTML = `<h3>Week ${weekNumber}: ${range.replace('-', ' - ')}</h3>`;
-          
           if (Object.keys(data).length === 0) {
             const noBookingsDiv = document.createElement('div');
             noBookingsDiv.className = 'no-bookings';
@@ -707,7 +779,6 @@
             Object.entries(data).forEach(([day, roles]) => {
               const slotItemDiv = document.createElement('div');
               slotItemDiv.className = 'slot-item';
-              
               let rolesHTML = '';
               if (day === 'Sunday') {
                 const postType = dateRanges[range].days[day].postType;
@@ -716,7 +787,6 @@
               if (day === 'Wednesday') {
                 rolesHTML += `<div class="post-type-badge">BLOG POST</div>`;
               }
-              
               Object.entries(roles).forEach(([role, bookings]) => {
                 const roleBadgeClass = role.toLowerCase() === 'blogpost' ? 'blog' : 
                                      role.toLowerCase() === 'content' ? 'content' : 'design';
@@ -735,7 +805,6 @@
                   `;
                 });
               });
-              
               slotItemDiv.innerHTML = `
                 <div class="slot-details">
                   <div class="slot-day">
@@ -747,7 +816,6 @@
                   ${rolesHTML}
                 </div>
               `;
-              
               rangeDiv.appendChild(slotItemDiv);
             });
           }
@@ -768,7 +836,272 @@
       displaySlots().catch(error => {
         console.error('Error loading slots:', error);
       });
-    };
+    }
+
+    // --- Routing and Admin Logic ---
+    function showSection(section) {
+      document.getElementById('mainPortal').style.display = section === 'main' ? '' : 'none';
+      document.getElementById('adminLoginSection').style.display = section === 'adminLogin' ? 'flex' : 'none';
+      document.getElementById('adminDashboardSection').style.display = section === 'adminDashboard' ? '' : 'none';
+    }
+
+    function route() {
+      if (window.location.hash === '#/admin') {
+        onAuthStateChanged(auth, (user) => {
+          if (user && user.uid === 'GjBCSLAzhYXZmPGCiQjuYkiRdO63') {
+            showSection('adminDashboard');
+            loadAdminDashboard();
+          } else {
+            showSection('adminLogin');
+          }
+        });
+      } else {
+        showSection('main');
+      }
+    }
+
+    window.addEventListener('hashchange', route);
+    route();
+
+    // --- Admin Login Logic ---
+    const adminLoginForm = document.getElementById('adminLoginForm');
+    if (adminLoginForm) {
+      adminLoginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('adminEmail').value.trim();
+        const password = document.getElementById('adminPassword').value;
+        const btn = adminLoginForm.querySelector('button[type="submit"]');
+        btn.classList.add('loading');
+        try {
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          if (userCredential.user.uid === 'GjBCSLAzhYXZmPGCiQjuYkiRdO63') {
+            showToast('Login successful!', 'success');
+            showSection('adminDashboard');
+            loadAdminDashboard();
+            window.location.hash = '#/admin';
+          } else {
+            await signOut(auth);
+            showToast('Access denied: Not an admin.', 'error');
+          }
+        } catch (err) {
+          showToast('Login failed: ' + (err.message || 'Invalid credentials'), 'error');
+        } finally {
+          btn.classList.remove('loading');
+        }
+      });
+    }
+
+    // --- Admin Logout ---
+    const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+    if (adminLogoutBtn) {
+      adminLogoutBtn.addEventListener('click', async () => {
+        await signOut(auth);
+        showToast('Logged out.', 'info');
+        showSection('adminLogin');
+        window.location.hash = '#/admin';
+      });
+    }
+
+    // --- Admin Dashboard Navigation ---
+    const navMembers = document.getElementById('navMembers');
+    const navAssign = document.getElementById('navAssign');
+    if (navMembers && navAssign) {
+      navMembers.addEventListener('click', () => {
+        document.getElementById('adminMembersSection').style.display = 'block';
+        document.getElementById('adminAssignSection').style.display = 'none';
+        navMembers.style.background = 'var(--primary-gradient)';
+        navMembers.style.color = 'white';
+        navAssign.style.background = 'var(--surface-light)';
+        navAssign.style.color = 'var(--text)';
+      });
+      navAssign.addEventListener('click', () => {
+        document.getElementById('adminMembersSection').style.display = 'none';
+        document.getElementById('adminAssignSection').style.display = 'block';
+        navAssign.style.background = 'var(--primary-gradient)';
+        navAssign.style.color = 'white';
+        navMembers.style.background = 'var(--surface-light)';
+        navMembers.style.color = 'var(--text)';
+      });
+    }
+
+    // --- Members List Logic ---
+    async function loadMembers() {
+      const contentTeamList = document.getElementById('contentTeamList');
+      const designTeamList = document.getElementById('designTeamList');
+      contentTeamList.innerHTML = '';
+      designTeamList.innerHTML = '';
+      try {
+        const membersSnap = await get(ref(db, 'members'));
+        const members = membersSnap.exists() ? membersSnap.val() : {};
+        const content = members.contentTeam || {};
+        const design = members.designTeam || {};
+        for (const [key, member] of Object.entries(content)) {
+          const li = document.createElement('li');
+          li.style.marginBottom = '1rem';
+          li.innerHTML = `<div style="display:flex;flex-direction:column;gap:0.2rem;"><span style="font-weight:600;">${member.name}</span><span style="color:var(--text-muted);font-size:0.95em;">${member.number}</span></div>`;
+          contentTeamList.appendChild(li);
+        }
+        for (const [key, member] of Object.entries(design)) {
+          const li = document.createElement('li');
+          li.style.marginBottom = '1rem';
+          li.innerHTML = `<div style="display:flex;flex-direction:column;gap:0.2rem;"><span style="font-weight:600;">${member.name}</span><span style="color:var(--text-muted);font-size:0.95em;">${member.number}</span></div>`;
+          designTeamList.appendChild(li);
+        }
+      } catch (err) {
+        showToast('Failed to load members', 'error');
+      }
+    }
+
+    // --- Add Member Logic ---
+    const addMemberForm = document.getElementById('addMemberForm');
+    if (addMemberForm) {
+      addMemberForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('memberName').value.trim();
+        const number = document.getElementById('memberNumber').value.trim();
+        const team = document.getElementById('memberTeam').value;
+        const btn = addMemberForm.querySelector('button[type="submit"]');
+        btn.classList.add('loading');
+        try {
+          if (!name || !number || !team) throw new Error('All fields required');
+          await push(ref(db, `members/${team}`), { name, number });
+          showToast('Member added!', 'success');
+          addMemberForm.reset();
+          loadMembers();
+        } catch (err) {
+          showToast('Failed to add member', 'error');
+        } finally {
+          btn.classList.remove('loading');
+        }
+      });
+    }
+
+    // --- Assign Tasks Logic ---
+    async function loadAssignTasks() {
+      const assignTasksList = document.getElementById('assignTasksList');
+      assignTasksList.innerHTML = '';
+      // Load members
+      let members = { contentTeam: {}, designTeam: {} };
+      try {
+        const membersSnap = await get(ref(db, 'members'));
+        if (membersSnap.exists()) members = membersSnap.val();
+      } catch {}
+      // Load bookings
+      let bookings = {};
+      try {
+        const bookingsSnap = await get(ref(db, 'bookings'));
+        if (bookingsSnap.exists()) bookings = bookingsSnap.val();
+      } catch {}
+      // For each dateRange and day/role
+      Object.entries(dateRanges).forEach(([rangeKey, rangeObj], i) => {
+        const weekDiv = document.createElement('div');
+        weekDiv.style.marginBottom = '2rem';
+        weekDiv.innerHTML = `<h3>Week ${i+1}: ${rangeKey.replace('-', ' - ')}</h3>`;
+        Object.entries(rangeObj.days).forEach(([day, dayObj]) => {
+          let roles = [];
+          if (day === 'Sunday') {
+            roles = ['Content', 'Design'];
+          } else if (day === 'Wednesday') {
+            roles = ['BlogPost'];
+          }
+          roles.forEach(role => {
+            const slotDiv = document.createElement('div');
+            slotDiv.className = 'slot-item';
+            slotDiv.style.flexDirection = 'column';
+            slotDiv.style.alignItems = 'flex-start';
+            // Show assigned members
+            let assigned = (bookings?.[rangeKey]?.[day]?.[role] ? Object.values(bookings[rangeKey][day][role]) : []);
+            let assignedHTML = '';
+            if (assigned.length > 0) {
+              assignedHTML = assigned.map(m => `<div style="margin-bottom:0.2rem;"><span style="font-weight:600;">${m.name}</span> <span style="color:var(--text-muted);font-size:0.95em;">${m.number}</span></div>`).join('');
+            } else {
+              assignedHTML = '<span style="color:var(--text-muted);">No one assigned yet</span>';
+            }
+            // Member dropdown
+            let teamType = (role === 'Design') ? 'designTeam' : 'contentTeam';
+            let memberEntries = Object.entries(members[teamType] || {});
+            let memberOptions = '';
+            let canAssign = assigned.length < 3 && memberEntries.length > 0;
+            if (memberEntries.length > 0) {
+              memberOptions = memberEntries.map(([k, m]) => `<option value="${k}">${m.name} (${m.number})</option>`).join('');
+            } else {
+              memberOptions = '<option value="" disabled selected>No members available</option>';
+            }
+            slotDiv.innerHTML = `
+              <div style="display:flex;align-items:center;gap:1rem;">
+                <div style="font-weight:600;">${day} (${formatDate(dayObj.date || dayObj)})</div>
+                <span class="category-badge ${role.toLowerCase() === 'blogpost' ? 'blog' : role.toLowerCase() === 'content' ? 'content' : 'design'}">${role}</span>
+              </div>
+              <div style="margin:0.5rem 0 0.5rem 0;">${assignedHTML}</div>
+              <form class="assignForm" data-range="${rangeKey}" data-day="${day}" data-role="${role}" style="display:flex;gap:0.5rem;align-items:center;">
+                <select required name="memberKey" style="padding:0.5rem 1rem;border-radius:6px;">
+                  <option value="" disabled selected>Select member</option>
+                  ${memberOptions}
+                </select>
+                <button type="submit" ${canAssign ? '' : 'disabled'} style="background:var(--primary-gradient);color:white;border:none;border-radius:6px;padding:0.5rem 1.2rem;font-weight:600;cursor:pointer;">Assign</button>
+              </form>
+            `;
+            assignTasksList.appendChild(slotDiv);
+          });
+        });
+        assignTasksList.appendChild(weekDiv);
+      });
+      // Assign form submit
+      assignTasksList.querySelectorAll('.assignForm').forEach(form => {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const btn = form.querySelector('button[type="submit"]');
+          btn.classList.add('loading');
+          const range = form.getAttribute('data-range');
+          const day = form.getAttribute('data-day');
+          const role = form.getAttribute('data-role');
+          const memberKey = form.memberKey.value;
+          let teamType = (role === 'Design') ? 'designTeam' : 'contentTeam';
+          const member = members[teamType]?.[memberKey];
+          if (!member) {
+            showToast('Select a valid member', 'error');
+            btn.classList.remove('loading');
+            return;
+          }
+          try {
+            // Get current bookings for this slot
+            const slotRef = ref(db, `bookings/${range}/${day}/${role}`);
+            const snap = await get(slotRef);
+            let current = snap.exists() ? snap.val() : {};
+            if (Object.keys(current).length >= 3) {
+              showToast('Maximum 3 slots filled', 'warning');
+              btn.classList.remove('loading');
+              return;
+            }
+            await push(slotRef, {
+              name: member.name,
+              number: member.number,
+              date: formatDate(dateRanges[range].days[day].date || dateRanges[range].days[day])
+            });
+            showToast('Assigned!', 'success');
+            loadAssignTasks();
+            displaySlots(); // update main portal if open
+          } catch (err) {
+            showToast('Failed to assign', 'error');
+          } finally {
+            btn.classList.remove('loading');
+          }
+        });
+      });
+    }
+
+    // --- Load Admin Dashboard ---
+    function loadAdminDashboard() {
+      // Default to Members tab
+      document.getElementById('adminMembersSection').style.display = 'block';
+      document.getElementById('adminAssignSection').style.display = 'none';
+      navMembers.style.background = 'var(--primary-gradient)';
+      navMembers.style.color = 'white';
+      navAssign.style.background = 'var(--surface-light)';
+      navAssign.style.color = 'var(--text)';
+      loadMembers();
+      loadAssignTasks();
+    }
   </script>
   
   <script>
