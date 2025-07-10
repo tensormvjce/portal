@@ -354,6 +354,40 @@
       body {
         padding: 1.5rem 1rem;
       }
+
+      #adminNav {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+        padding: 1rem 0.5rem;
+      }
+      #adminNav button {
+        width: 100%;
+        min-width: 0;
+        text-align: center;
+        margin: 0;
+      }
+      #adminNav div[style*="flex:1"] {
+        display: none;
+      }
+    }
+
+    @media (min-width: 769px) {
+      #adminNav {
+        flex-direction: row;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 2rem;
+      }
+      #adminNav button {
+        width: auto;
+        min-width: 120px;
+        text-align: center;
+        margin: 0;
+      }
+      #adminNav div[style*="flex:1"] {
+        display: block;
+      }
     }
 
     .credits {
@@ -514,7 +548,7 @@
   </div>
   <!-- Admin Dashboard Section (hidden by default) -->
   <div id="adminDashboardSection" style="display:none;">
-    <nav style="background: var(--surface); padding: 1rem 2rem; display: flex; gap: 1rem; align-items: center; border-radius: var(--border-radius); margin: 2rem auto 1rem; max-width: 1200px;">
+    <nav id="adminNav" class="admin-nav" style="background: var(--surface); padding: 1rem 2rem; display: flex; gap: 1rem; align-items: center; border-radius: var(--border-radius); margin: 2rem auto 1rem; max-width: 1200px; flex-wrap: wrap;">
       <button id="navMembers" style="background: var(--primary-gradient); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Members List</button>
       <button id="navAssign" style="background: var(--surface-light); color: var(--text); border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Assign Tasks</button>
       <button id="navAutoAssign" style="background: var(--surface-light); color: var(--text); border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Auto-Assign</button>
