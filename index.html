@@ -517,6 +517,7 @@
     <nav style="background: var(--surface); padding: 1rem 2rem; display: flex; gap: 1rem; align-items: center; border-radius: var(--border-radius); margin: 2rem auto 1rem; max-width: 1200px;">
       <button id="navMembers" style="background: var(--primary-gradient); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Members List</button>
       <button id="navAssign" style="background: var(--surface-light); color: var(--text); border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Assign Tasks</button>
+      <button id="navAutoAssign" style="background: var(--surface-light); color: var(--text); border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Auto-Assign</button>
       <div style="flex:1"></div>
       <button id="adminLogoutBtn" style="background: var(--error); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Logout</button>
     </nav>
@@ -559,6 +560,35 @@
       <div class="card" style="width: 100%;">
         <h2 style="margin-bottom: 1rem;">Assign Tasks</h2>
         <div id="assignTasksList"></div>
+      </div>
+    </div>
+    <div id="adminAutoAssignSection" class="container" style="display: none; max-width: 1200px; margin: 0 auto;">
+      <div class="card" style="width: 100%;">
+        <h2 style="margin-bottom: 1rem;">Auto-Assign Slots</h2>
+        <form id="autoAssignForm" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+          <div class="form-group" style="min-width: 180px;">
+            <label for="autoDateRange">Date Range</label>
+            <select id="autoDateRange" required>
+              <option value="" disabled selected>Select week</option>
+              <option value="Jul7-Jul13">Week 1: Jul 7 - Jul 13, 2025</option>
+              <option value="Jul14-Jul20">Week 2: Jul 14 - Jul 20, 2025</option>
+            </select>
+          </div>
+          <div class="form-group" style="min-width: 180px;">
+            <label for="autoDay">Day</label>
+            <select id="autoDay" required>
+              <option value="" disabled selected>Choose day</option>
+            </select>
+          </div>
+          <div class="form-group" style="min-width: 180px;">
+            <label for="autoRole">Role</label>
+            <select id="autoRole" required>
+              <option value="" disabled selected>Select role</option>
+            </select>
+          </div>
+          <button type="submit" style="min-width: 150px;">Auto Assign</button>
+        </form>
+        <div id="autoAssignResult" style="margin-top:2rem;"></div>
       </div>
     </div>
   </div>
@@ -905,14 +935,18 @@
     // --- Admin Dashboard Navigation ---
     const navMembers = document.getElementById('navMembers');
     const navAssign = document.getElementById('navAssign');
-    if (navMembers && navAssign) {
+    const navAutoAssign = document.getElementById('navAutoAssign');
+    if (navMembers && navAssign && navAutoAssign) {
       navMembers.addEventListener('click', () => {
         document.getElementById('adminMembersSection').style.display = 'block';
         document.getElementById('adminAssignSection').style.display = 'none';
+        document.getElementById('adminAutoAssignSection').style.display = 'none';
         navMembers.style.background = 'var(--primary-gradient)';
         navMembers.style.color = 'white';
         navAssign.style.background = 'var(--surface-light)';
         navAssign.style.color = 'var(--text)';
+        navAutoAssign.style.background = 'var(--surface-light)';
+        navAutoAssign.style.color = 'var(--text)';
       });
       navAssign.addEventListener('click', () => {
         document.getElementById('adminMembersSection').style.display = 'none';
@@ -921,6 +955,19 @@
         navAssign.style.color = 'white';
         navMembers.style.background = 'var(--surface-light)';
         navMembers.style.color = 'var(--text)';
+        navAutoAssign.style.background = 'var(--surface-light)';
+        navAutoAssign.style.color = 'var(--text)';
+      });
+      navAutoAssign.addEventListener('click', () => {
+        document.getElementById('adminMembersSection').style.display = 'none';
+        document.getElementById('adminAssignSection').style.display = 'none';
+        document.getElementById('adminAutoAssignSection').style.display = 'block';
+        navAutoAssign.style.background = 'var(--primary-gradient)';
+        navAutoAssign.style.color = 'white';
+        navMembers.style.background = 'var(--surface-light)';
+        navMembers.style.color = 'var(--text)';
+        navAssign.style.background = 'var(--surface-light)';
+        navAssign.style.color = 'var(--text)';
       });
     }
 
@@ -1099,12 +1146,118 @@
       // Default to Members tab
       document.getElementById('adminMembersSection').style.display = 'block';
       document.getElementById('adminAssignSection').style.display = 'none';
+      document.getElementById('adminAutoAssignSection').style.display = 'none';
       navMembers.style.background = 'var(--primary-gradient)';
       navMembers.style.color = 'white';
       navAssign.style.background = 'var(--surface-light)';
       navAssign.style.color = 'var(--text)';
+      navAutoAssign.style.background = 'var(--surface-light)';
+      navAutoAssign.style.color = 'var(--text)';
       loadMembers();
       loadAssignTasks();
+    }
+
+    // --- Auto-Assign Tab Logic ---
+    const autoDateRange = document.getElementById('autoDateRange');
+    const autoDay = document.getElementById('autoDay');
+    const autoRole = document.getElementById('autoRole');
+    if (autoDateRange) {
+      autoDateRange.addEventListener('change', function(e) {
+        const rangeKey = e.target.value;
+        autoDay.innerHTML = '<option value="" disabled selected>Choose day</option>';
+        autoRole.innerHTML = '<option value="" disabled selected>Select role</option>';
+        const range = dateRanges[rangeKey];
+        for (const [dayName, dayData] of Object.entries(range.days)) {
+          const option = document.createElement('option');
+          option.value = dayName;
+          if (dayName === 'Sunday') {
+            option.textContent = `${dayName} (${formatDate(dayData.date)}) - ${dayData.postType.toUpperCase()}`;
+          } else {
+            option.textContent = `${dayName} (${formatDate(dayData)})`;
+          }
+          autoDay.appendChild(option);
+        }
+      });
+    }
+    if (autoDay) {
+      autoDay.addEventListener('change', function(e) {
+        autoRole.innerHTML = '<option value="" disabled selected>Select role</option>';
+        if (e.target.value === 'Sunday') {
+          autoRole.innerHTML = `
+            <option value="Content">Content (3 slots)</option>
+            <option value="Design">Design (3 slots)</option>
+          `;
+        } else if (e.target.value === 'Wednesday') {
+          autoRole.innerHTML = `
+            <option value="BlogPost">Blog Post Writer (3 slots)</option>
+          `;
+        }
+      });
+    }
+    const autoAssignForm = document.getElementById('autoAssignForm');
+    if (autoAssignForm) {
+      autoAssignForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitBtn = autoAssignForm.querySelector('button[type="submit"]');
+        submitBtn.classList.add('loading');
+        const range = autoDateRange.value;
+        const day = autoDay.value;
+        const role = autoRole.value;
+        if (!range || !day || !role) {
+          showToast('Please select all fields', 'error');
+          submitBtn.classList.remove('loading');
+          return;
+        }
+        try {
+          // Fetch members
+          let teamType = (role === 'Design') ? 'designTeam' : (role === 'Content' ? 'contentTeam' : 'contentTeam');
+          const membersSnap = await get(ref(db, `members/${teamType}`));
+          const members = membersSnap.exists() ? membersSnap.val() : {};
+          // Fetch current bookings
+          const slotRef = ref(db, `bookings/${range}/${day}/${role}`);
+          const bookingsSnap = await get(slotRef);
+          const currentBookings = bookingsSnap.exists() ? bookingsSnap.val() : {};
+          const alreadyAssignedNumbers = new Set(Object.values(currentBookings).map(m => m.number));
+          // Filter unassigned members
+          const unassigned = Object.values(members).filter(m => !alreadyAssignedNumbers.has(m.number));
+          // How many to assign?
+          const toAssign = 3 - Object.keys(currentBookings).length;
+          if (toAssign <= 0) {
+            showToast('All slots already filled', 'warning');
+            submitBtn.classList.remove('loading');
+            return;
+          }
+          if (unassigned.length === 0) {
+            showToast('No unassigned members available', 'warning');
+            submitBtn.classList.remove('loading');
+            return;
+          }
+          // Randomly pick members
+          const shuffled = unassigned.sort(() => 0.5 - Math.random());
+          const selected = shuffled.slice(0, toAssign);
+          // Assign them
+          for (const member of selected) {
+            await push(slotRef, {
+              name: member.name,
+              number: member.number,
+              date: formatDate(dateRanges[range].days[day].date || dateRanges[range].days[day])
+            });
+          }
+          showToast('Auto-assigned successfully!', 'success');
+          // Show result
+          const allBookingsSnap = await get(slotRef);
+          const allBookings = allBookingsSnap.exists() ? allBookingsSnap.val() : {};
+          let resultHTML = `<h4>Assigned Members:</h4>`;
+          resultHTML += Object.values(allBookings).map(m => `<div style="margin-bottom:0.2rem;"><span style="font-weight:600;">${m.name}</span> <span style="color:var(--text-muted);font-size:0.95em;">${m.number}</span></div>`).join('');
+          document.getElementById('autoAssignResult').innerHTML = resultHTML;
+          loadAssignTasks();
+          displaySlots();
+        } catch (err) {
+          showToast('Auto-assign failed', 'error');
+        } finally {
+          submitBtn.classList.remove('loading');
+        }
+      });
     }
   </script>
   
