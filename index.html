@@ -482,8 +482,8 @@
           <label for="dateRangeSelect">Date Range</label>
           <select id="dateRangeSelect" required>
             <option value="" disabled selected>Select week</option>
-              <option value="Jul21-Jul27">Week 1: Jul 21 - Jul 27, 2025</option>
-              <option value="Jul28-Aug3">Week 2: Jul 28 - Aug 3, 2025</option>
+              <option value="Aug4-Aug10">Week 1: Aug 4 - Aug 10, 2025</option>
+              <option value="Aug11-Aug17">Week 2: Aug 11 - Aug 17, 2025</option>
           </select>
         </div>
 
@@ -604,8 +604,8 @@
             <label for="autoDateRange">Date Range</label>
             <select id="autoDateRange" required>
               <option value="" disabled selected>Select week</option>
-              <option value="Jul21-Jul27">Week 1: Jul 21 - Jul 27, 2025</option>
-              <option value="Jul28-Aug3">Week 2: Jul 28 - Aug 3, 2025</option>
+              <option value="Aug4-Aug10">Week 1: Aug 4 - Aug 10, 2025</option>
+              <option value="Aug11-Aug17">Week 2: Aug 11 - Aug 17, 2025</option>
             </select>
           </div>
           <div class="form-group" style="min-width: 180px;">
@@ -657,24 +657,24 @@
     const auth = getAuth(app);
 
     const dateRanges = {
-      'Jul21-Jul27': {
-        start: new Date(2025, 6, 21),
-        end: new Date(2025, 6, 27),
+      'Aug4-Aug10': {
+        start: new Date(2025, 7, 4),
+        end: new Date(2025, 7, 10),
         days: {
-          'Wednesday': new Date(2025, 6, 23),
+          'Wednesday': new Date(2025, 7, 6),
           'Sunday': {
-            date: new Date(2025, 6, 27),
+            date: new Date(2025, 7, 10),
             postType: 'text'
           }
         }
       },
-      'Jul28-Aug3': {
-        start: new Date(2025, 6, 28),
-        end: new Date(2025, 7, 3),
+      'Aug11-Aug17': {
+        start: new Date(2025, 7, 11),
+        end: new Date(2025, 7, 17),
         days: {
-          'Wednesday': new Date(2025, 6, 30),
+          'Wednesday': new Date(2025, 7, 13),
           'Sunday': {
-            date: new Date(2025, 7, 3),
+            date: new Date(2025, 7, 17),
             postType: 'video'
           }
         }
@@ -822,7 +822,7 @@
         </div>
       `;
       try {
-        const dateRangeKeys = ['Jul21-Jul27', 'Jul28-Aug3'];
+        const dateRangeKeys = ['Aug4-Aug10', 'Aug11-Aug17'];
         container.innerHTML = '';
         for (const range of dateRangeKeys) {
           const rangeRef = ref(db, 'bookings/' + range);
