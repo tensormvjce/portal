@@ -356,19 +356,47 @@
       }
 
       #adminNav {
-        flex-direction: column;
-        align-items: stretch;
+        flex-direction: row;
+        align-items: center;
         gap: 0.75rem;
-        padding: 1rem 0.5rem;
+        padding: 1rem;
+        position: relative;
       }
-      #adminNav button {
+      
+      .hamburger-btn {
+        display: block !important;
+      }
+      
+      .nav-buttons {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--surface);
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        display: none;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      .nav-buttons.show {
+        display: flex;
+      }
+      
+      .nav-buttons button {
         width: 100%;
-        min-width: 0;
         text-align: center;
         margin: 0;
+        padding: 0.75rem 1rem;
       }
-      #adminNav div[style*="flex:1"] {
-        display: none;
+      
+      #adminLogoutBtn {
+        margin-left: auto;
       }
     }
 
@@ -548,10 +576,20 @@
   </div>
   <!-- Admin Dashboard Section (hidden by default) -->
   <div id="adminDashboardSection" style="display:none;">
-    <nav id="adminNav" class="admin-nav" style="background: var(--surface); padding: 1rem 2rem; display: flex; gap: 1rem; align-items: center; border-radius: var(--border-radius); margin: 2rem auto 1rem; max-width: 1200px; flex-wrap: wrap;">
-      <button id="navMembers" style="background: var(--primary-gradient); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Members List</button>
-      <button id="navAssign" style="background: var(--surface-light); color: var(--text); border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Assign Tasks</button>
-      <button id="navAutoAssign" style="background: var(--surface-light); color: var(--text); border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Auto-Assign</button>
+    <nav id="adminNav" class="admin-nav" style="background: var(--surface); padding: 1rem 2rem; display: flex; gap: 1rem; align-items: center; border-radius: var(--border-radius); margin: 2rem auto 1rem; max-width: 1200px; flex-wrap: wrap; position: relative;">
+      <!-- Hamburger Menu Button (Mobile) -->
+      <button id="hamburgerBtn" class="hamburger-btn" style="display: none; background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; padding: 0.5rem;">
+        <i class="fas fa-bars"></i>
+      </button>
+      
+      <!-- Navigation Buttons -->
+      <div id="navButtons" class="nav-buttons" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <button id="navMembers" style="background: var(--primary-gradient); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Members List</button>
+        <button id="navAssign" style="background: var(--surface-light); color: var(--text); border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Assign Tasks</button>
+        <button id="navAutoAssign" style="background: var(--surface-light); color: var(--text); border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Auto-Assign</button>
+        <button id="advanceCycleBtn" style="background: var(--warning); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Next Cycle</button>
+      </div>
+      
       <div style="flex:1"></div>
       <button id="adminLogoutBtn" style="background: var(--error); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Logout</button>
     </nav>
@@ -656,30 +694,160 @@
     const db = getDatabase(app);
     const auth = getAuth(app);
 
-    const dateRanges = {
-      'Aug11-Aug17': {
-        start: new Date(2025, 7, 11),
-        end: new Date(2025, 7, 17),
-        days: {
-          'Wednesday': new Date(2025, 7, 13),
-          'Sunday': {
-            date: new Date(2025, 7, 17),
-            postType: 'text'
-          }
-        }
-      },
-      'Aug18-Aug24': {
-        start: new Date(2025, 7, 18),
-        end: new Date(2025, 7, 24),
-        days: {
-          'Wednesday': new Date(2025, 7, 20),
-          'Sunday': {
-            date: new Date(2025, 7, 24),
-            postType: 'video'
-          }
-        }
+    // Current active weeks - only 2 weeks at a time
+    let dateRanges = {};
+    let currentWeekCycle = 1; // Track which 2-week cycle we're in
+    
+    // Function to generate date range for a given week
+    function generateDateRange(weekKey) {
+      // Parse week key like "Aug11-Aug17" to get start and end dates
+      const match = weekKey.match(/([A-Za-z]+)(\d+)-([A-Za-z]+)(\d+)/);
+      if (!match) return null;
+      
+      const startMonth = match[1];
+      const startDay = parseInt(match[2]);
+      const endMonth = match[3];
+      const endDay = parseInt(match[4]);
+      const year = 2025; // You can make this dynamic too
+      
+      const monthMap = {
+        'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+        'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+      };
+      
+      const startDate = new Date(year, monthMap[startMonth], startDay);
+      const endDate = new Date(year, monthMap[endMonth], endDay);
+      
+      // Find Wednesday and Sunday in this range
+      const wednesday = new Date(startDate);
+      while (wednesday.getDay() !== 3) { // 3 = Wednesday
+        wednesday.setDate(wednesday.getDate() + 1);
       }
-    };
+      
+      const sunday = new Date(startDate);
+      while (sunday.getDay() !== 0) { // 0 = Sunday
+        sunday.setDate(sunday.getDate() + 1);
+      }
+      
+      return {
+        start: startDate,
+        end: endDate,
+        days: {
+          'Wednesday': wednesday,
+          'Sunday': {
+            date: sunday,
+            postType: weekKey.includes('Aug11') || weekKey.includes('Aug18') ? 'text' : 'video' // Alternate format
+          }
+        }
+      };
+    }
+    
+    // Function to get current active weeks (only 2 weeks)
+    async function getCurrentActiveWeeks() {
+      try {
+        // Check if there's a current cycle setting in Firebase
+        const cycleRef = ref(db, 'currentCycle');
+        const cycleSnapshot = await get(cycleRef);
+        
+        if (cycleSnapshot.exists()) {
+          currentWeekCycle = cycleSnapshot.val().cycle || 1;
+        }
+        
+        // Define week cycles - each cycle has 2 weeks
+        const weekCycles = {
+          1: ['Aug11-Aug17', 'Aug18-Aug24'],
+          2: ['Aug25-Aug31', 'Sep1-Sep7'],
+          3: ['Sep8-Sep14', 'Sep15-Sep21'],
+          // Add more cycles as needed
+        };
+        
+        const currentWeeks = weekCycles[currentWeekCycle] || weekCycles[1];
+        
+        // Generate date ranges for current 2 weeks
+        dateRanges = {};
+        currentWeeks.forEach(weekKey => {
+          const range = generateDateRange(weekKey);
+          if (range) {
+            dateRanges[weekKey] = range;
+          }
+        });
+        
+        // Update dropdowns with current 2 weeks
+        updateWeekDropdowns();
+        
+      } catch (error) {
+        console.error('Error loading current weeks:', error);
+        // Fallback to default weeks
+        const defaultWeeks = ['Aug11-Aug17', 'Aug18-Aug24'];
+        defaultWeeks.forEach(weekKey => {
+          const range = generateDateRange(weekKey);
+          if (range) {
+            dateRanges[weekKey] = range;
+          }
+        });
+        updateWeekDropdowns();
+      }
+    }
+    
+    // Function to update week dropdowns (only show 2 weeks)
+    function updateWeekDropdowns() {
+      const weekKeys = Object.keys(dateRanges).sort();
+      
+      // Update main form dropdown
+      const dateRangeSelect = document.getElementById('dateRangeSelect');
+      if (dateRangeSelect) {
+        dateRangeSelect.innerHTML = '<option value="" disabled selected>Select week</option>';
+        weekKeys.forEach((weekKey, index) => {
+          const option = document.createElement('option');
+          option.value = weekKey;
+          option.textContent = `Week ${index + 1}: ${weekKey.replace('-', ' - ')}`;
+          dateRangeSelect.appendChild(option);
+        });
+      }
+      
+      // Update admin auto-assign dropdown
+      const autoDateRange = document.getElementById('autoDateRange');
+      if (autoDateRange) {
+        autoDateRange.innerHTML = '<option value="" disabled selected>Select week</option>';
+        weekKeys.forEach((weekKey, index) => {
+          const option = document.createElement('option');
+          option.value = weekKey;
+          option.textContent = `Week ${index + 1}: ${weekKey.replace('-', ' - ')}`;
+          autoDateRange.appendChild(option);
+        });
+      }
+    }
+    
+    // Function to advance to next 2-week cycle (admin function)
+    async function advanceToNextCycle() {
+      try {
+        const nextCycle = currentWeekCycle + 1;
+        
+        // Check if next cycle exists in our predefined cycles
+        const weekCycles = {
+          1: ['Aug11-Aug17', 'Aug18-Aug24'],
+          2: ['Aug25-Aug31', 'Sep1-Sep7'],
+          3: ['Sep8-Sep14', 'Sep15-Sep21'],
+          // Add more cycles as needed
+        };
+        
+        if (weekCycles[nextCycle]) {
+          // Update current cycle in Firebase
+          await set(ref(db, 'currentCycle'), { cycle: nextCycle });
+          currentWeekCycle = nextCycle;
+          
+          // Reload current weeks
+          await getCurrentActiveWeeks();
+          
+          showToast('Advanced to next 2-week cycle!', 'success');
+        } else {
+          showToast('No more cycles available. Please add new cycles.', 'warning');
+        }
+      } catch (error) {
+        console.error('Error advancing cycle:', error);
+        showToast('Failed to advance cycle', 'error');
+      }
+    }
 
     function formatDate(date) {
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -719,7 +887,7 @@
         `;
       } else if (e.target.value === 'Wednesday') {
         roleSelect.innerHTML = `
-          <option value="BlogPost">Blog Post Writer (3 slots)</option>
+          <option value="BlogPost">Blog Post Writer (1 slot)</option>
         `;
       }
     });
@@ -790,8 +958,9 @@
         const slotRef = ref(db, `bookings/${formData.dateRange}/${formData.day}/${formData.role}`);
         const snapshot = await get(slotRef);
         const currentBookings = snapshot.exists() ? snapshot.val() : {};
-        if (Object.keys(currentBookings).length >= 3) {
-          showToast('Maximum 3 slots filled', 'warning');
+        const maxSlots = formData.role === 'BlogPost' ? 1 : 3;
+        if (Object.keys(currentBookings).length >= maxSlots) {
+          showToast(`Maximum ${maxSlots} slot${maxSlots > 1 ? 's' : ''} filled`, 'warning');
           submitButton.classList.remove('loading');
           return;
         }
@@ -822,7 +991,7 @@
         </div>
       `;
       try {
-        const dateRangeKeys = ['Aug11-Aug17', 'Aug18-Aug24'];
+        const dateRangeKeys = Object.keys(dateRanges).sort();
         container.innerHTML = '';
         for (const range of dateRangeKeys) {
           const rangeRef = ref(db, 'bookings/' + range);
@@ -896,7 +1065,8 @@
       }
     }
 
-    window.onload = function() {
+    window.onload = async function() {
+      await getCurrentActiveWeeks();
       displaySlots().catch(error => {
         console.error('Error loading slots:', error);
       });
@@ -966,6 +1136,53 @@
       });
     }
 
+    // --- Advance Cycle Button ---
+    const advanceCycleBtn = document.getElementById('advanceCycleBtn');
+    if (advanceCycleBtn) {
+      advanceCycleBtn.addEventListener('click', async () => {
+        advanceCycleBtn.classList.add('loading');
+        await advanceToNextCycle();
+        advanceCycleBtn.classList.remove('loading');
+      });
+    }
+
+    // --- Hamburger Menu Functionality ---
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const navButtons = document.getElementById('navButtons');
+    
+    if (hamburgerBtn && navButtons) {
+      hamburgerBtn.addEventListener('click', () => {
+        navButtons.classList.toggle('show');
+        
+        // Change hamburger icon
+        const icon = hamburgerBtn.querySelector('i');
+        if (navButtons.classList.contains('show')) {
+          icon.className = 'fas fa-times';
+        } else {
+          icon.className = 'fas fa-bars';
+        }
+      });
+      
+      // Close menu when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!hamburgerBtn.contains(e.target) && !navButtons.contains(e.target)) {
+          navButtons.classList.remove('show');
+          const icon = hamburgerBtn.querySelector('i');
+          icon.className = 'fas fa-bars';
+        }
+      });
+      
+      // Close menu when a navigation button is clicked
+      const navButtonElements = navButtons.querySelectorAll('button');
+      navButtonElements.forEach(button => {
+        button.addEventListener('click', () => {
+          navButtons.classList.remove('show');
+          const icon = hamburgerBtn.querySelector('i');
+          icon.className = 'fas fa-bars';
+        });
+      });
+    }
+
     // --- Admin Dashboard Navigation ---
     const navMembers = document.getElementById('navMembers');
     const navAssign = document.getElementById('navAssign');
@@ -985,12 +1202,15 @@
       navAssign.addEventListener('click', () => {
         document.getElementById('adminMembersSection').style.display = 'none';
         document.getElementById('adminAssignSection').style.display = 'block';
+        document.getElementById('adminAutoAssignSection').style.display = 'none';
         navAssign.style.background = 'var(--primary-gradient)';
         navAssign.style.color = 'white';
         navMembers.style.background = 'var(--surface-light)';
         navMembers.style.color = 'var(--text)';
         navAutoAssign.style.background = 'var(--surface-light)';
         navAutoAssign.style.color = 'var(--text)';
+        // Load assign tasks only when tab is clicked
+        loadAssignTasks();
       });
       navAutoAssign.addEventListener('click', () => {
         document.getElementById('adminMembersSection').style.display = 'none';
@@ -1074,7 +1294,9 @@
         if (bookingsSnap.exists()) bookings = bookingsSnap.val();
       } catch {}
       // For each dateRange and day/role
-      Object.entries(dateRanges).forEach(([rangeKey, rangeObj], i) => {
+      const weekKeys = Object.keys(dateRanges).sort();
+      weekKeys.forEach((rangeKey, i) => {
+        const rangeObj = dateRanges[rangeKey];
         const weekDiv = document.createElement('div');
         weekDiv.style.marginBottom = '2rem';
         weekDiv.innerHTML = `<h3>Week ${i+1}: ${rangeKey.replace('-', ' - ')}</h3>`;
@@ -1092,11 +1314,28 @@
             slotDiv.className = 'slot-item';
             slotDiv.style.flexDirection = 'column';
             slotDiv.style.alignItems = 'flex-start';
-            // Show assigned members
-            let assigned = (bookings?.[rangeKey]?.[day]?.[role] ? Object.values(bookings[rangeKey][day][role]) : []);
+            // Show assigned members with delete buttons
+            let assigned = (bookings?.[rangeKey]?.[day]?.[role] ? Object.entries(bookings[rangeKey][day][role]) : []);
             let assignedHTML = '';
             if (assigned.length > 0) {
-              assignedHTML = assigned.map(m => `<div style="margin-bottom:0.2rem;"><span style="font-weight:600;">${m.name}</span> <span style="color:var(--text-muted);font-size:0.95em;">${m.number}</span></div>`).join('');
+              assignedHTML = assigned.map(([bookingKey, m]) => `
+                <div style="margin-bottom:0.5rem;display:flex;align-items:center;gap:0.5rem;justify-content:space-between;background:rgba(255,255,255,0.05);padding:0.5rem;border-radius:6px;">
+                  <div>
+                    <span style="font-weight:600;">${m.name}</span> 
+                    <span style="color:var(--text-muted);font-size:0.95em;">${m.number}</span>
+                  </div>
+                  <button type="button" 
+                    class="delete-booking-btn" 
+                    data-range="${rangeKey}" 
+                    data-day="${day}" 
+                    data-role="${role}" 
+                    data-booking-key="${bookingKey}"
+                    data-member-name="${m.name}"
+                    style="background:var(--error);color:white;border:none;border-radius:4px;padding:0.25rem 0.5rem;font-size:0.8rem;cursor:pointer;transition:var(--transition);">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              `).join('');
             } else {
               assignedHTML = '<span style="color:var(--text-muted);">No one assigned yet</span>';
             }
@@ -1104,7 +1343,8 @@
             let teamType = (role === 'Design') ? 'designTeam' : 'contentTeam';
             let memberEntries = Object.entries(members[teamType] || {});
             let memberOptions = '';
-            let canAssign = assigned.length < 3 && memberEntries.length > 0;
+            const maxSlots = role === 'BlogPost' ? 1 : 3;
+            let canAssign = assigned.length < maxSlots && memberEntries.length > 0;
             if (memberEntries.length > 0) {
               memberOptions = memberEntries.map(([k, m]) => `<option value="${k}">${m.name} (${m.number})</option>`).join('');
             } else {
@@ -1153,8 +1393,9 @@
             const slotRef = ref(db, `bookings/${range}/${day}/${role}`);
             const snap = await get(slotRef);
             let current = snap.exists() ? snap.val() : {};
-            if (Object.keys(current).length >= 3) {
-              showToast('Maximum 3 slots filled', 'warning');
+            const maxSlots = role === 'BlogPost' ? 1 : 3;
+            if (Object.keys(current).length >= maxSlots) {
+              showToast(`Maximum ${maxSlots} slot${maxSlots > 1 ? 's' : ''} filled`, 'warning');
               btn.classList.remove('loading');
               return;
             }
@@ -1173,10 +1414,47 @@
           }
         });
       });
+
+      // Delete booking buttons
+      assignTasksList.querySelectorAll('.delete-booking-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          
+          // Confirm deletion
+          const memberName = btn.getAttribute('data-member-name');
+          const range = btn.getAttribute('data-range');
+          const day = btn.getAttribute('data-day');
+          const role = btn.getAttribute('data-role');
+          const bookingKey = btn.getAttribute('data-booking-key');
+          
+          if (!confirm(`Are you sure you want to remove ${memberName} from ${day} (${range})?`)) {
+            return;
+          }
+          
+          btn.classList.add('loading');
+          btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+          
+          try {
+            // Delete the specific booking
+            const bookingRef = ref(db, `bookings/${range}/${day}/${role}/${bookingKey}`);
+            await set(bookingRef, null); // Set to null to delete
+            
+            showToast(`Removed ${memberName} from ${day}`, 'success');
+            loadAssignTasks(); // Reload the list
+            displaySlots(); // Update main portal if open
+          } catch (err) {
+            console.error('Error deleting booking:', err);
+            showToast('Failed to remove booking', 'error');
+            btn.innerHTML = '<i class="fas fa-trash"></i>';
+          } finally {
+            btn.classList.remove('loading');
+          }
+        });
+      });
     }
 
     // --- Load Admin Dashboard ---
-    function loadAdminDashboard() {
+    async function loadAdminDashboard() {
       // Default to Members tab
       document.getElementById('adminMembersSection').style.display = 'block';
       document.getElementById('adminAssignSection').style.display = 'none';
@@ -1187,8 +1465,9 @@
       navAssign.style.color = 'var(--text)';
       navAutoAssign.style.background = 'var(--surface-light)';
       navAutoAssign.style.color = 'var(--text)';
+      await getCurrentActiveWeeks();
       loadMembers();
-      loadAssignTasks();
+      // Don't load assign tasks here - only load when tab is clicked
     }
 
     // --- Auto-Assign Tab Logic ---
@@ -1223,7 +1502,7 @@
           `;
         } else if (e.target.value === 'Wednesday') {
           autoRole.innerHTML = `
-            <option value="BlogPost">Blog Post Writer (3 slots)</option>
+            <option value="BlogPost">Blog Post Writer (1 slot)</option>
           `;
         }
       });
@@ -1255,7 +1534,8 @@
           // Filter unassigned members
           const unassigned = Object.values(members).filter(m => !alreadyAssignedNumbers.has(m.number));
           // How many to assign?
-          const toAssign = 3 - Object.keys(currentBookings).length;
+          const maxSlots = role === 'BlogPost' ? 1 : 3;
+          const toAssign = maxSlots - Object.keys(currentBookings).length;
           if (toAssign <= 0) {
             showToast('All slots already filled', 'warning');
             submitBtn.classList.remove('loading');
@@ -1266,8 +1546,127 @@
             submitBtn.classList.remove('loading');
             return;
           }
+          
+          // Check for people who worked in the previous week and prevent same group formation from ALL previous weeks
+          let availableMembers = unassigned;
+          let allPreviousGroups = [];
+          let lastWeekWorkers = new Set();
+          
+          try {
+            // Get all bookings to find the previous week and collect ALL previous groups
+            const allBookingsRef = ref(db, 'bookings');
+            const allBookingsSnapshot = await get(allBookingsRef);
+            
+            if (allBookingsSnapshot.exists()) {
+              const allBookings = allBookingsSnapshot.val();
+              
+              // Sort weeks chronologically by parsing the dates
+              const allWeekKeys = Object.keys(allBookings).sort((a, b) => {
+                // Parse week keys like "Aug4-Aug10" to get start dates
+                const parseWeekStart = (weekKey) => {
+                  const match = weekKey.match(/([A-Za-z]+)(\d+)/);
+                  if (!match) return new Date(0);
+                  
+                  const month = match[1];
+                  const day = parseInt(match[2]);
+                  const year = 2025; // You can make this dynamic
+                  
+                  const monthMap = {
+                    'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+                    'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+                  };
+                  
+                  return new Date(year, monthMap[month], day);
+                };
+                
+                const dateA = parseWeekStart(a);
+                const dateB = parseWeekStart(b);
+                return dateA - dateB;
+              });
+              
+              const currentWeekIndex = allWeekKeys.indexOf(range);
+              
+              if (currentWeekIndex > 0) { // If not the first week ever, check previous weeks
+                // Get the immediate previous week for break logic
+                const previousWeek = allWeekKeys[currentWeekIndex - 1];
+                console.log(`Current week: ${range}, Previous week: ${previousWeek}`); // Debug log
+                
+                // Collect groups from ALL previous weeks (not just the immediate previous week)
+                for (let i = 0; i < currentWeekIndex; i++) {
+                  const pastWeek = allWeekKeys[i];
+                  const pastWeekBookings = allBookings[pastWeek];
+                  
+                  Object.entries(pastWeekBookings).forEach(([day, dayData]) => {
+                    Object.entries(dayData).forEach(([role, roleData]) => {
+                      const groupMembers = Object.values(roleData);
+                      if (groupMembers.length > 0) {
+                        // Store the group from any previous week
+                        allPreviousGroups.push({
+                          members: groupMembers,
+                          day: day,
+                          role: role,
+                          week: pastWeek
+                        });
+                        
+                        // Only add to lastWeekWorkers if it's the immediate previous week
+                        if (pastWeek === previousWeek) {
+                          groupMembers.forEach(member => {
+                            lastWeekWorkers.add(member.number);
+                            console.log(`Found worker from previous week: ${member.name} (${member.number})`); // Debug log
+                          });
+                        }
+                      }
+                    });
+                  });
+                }
+                
+                console.log(`Found ${allPreviousGroups.length} groups from all previous weeks`);
+                
+                // Filter out people who worked in the previous week (for break logic)
+                availableMembers = unassigned.filter(m => !lastWeekWorkers.has(m.number));
+                console.log(`Available members after filtering: ${availableMembers.map(m => m.name).join(', ')}`); // Debug log
+                
+                if (availableMembers.length === 0) {
+                  showToast('All available members worked last week. No breaks possible.', 'warning');
+                  submitBtn.classList.remove('loading');
+                  return;
+                }
+                
+                // Prevent same group formation from ALL previous weeks
+                if (availableMembers.length >= toAssign && allPreviousGroups.length > 0) {
+                  // Find groups from the same day and role in ANY previous week
+                  const sameDayRoleGroups = allPreviousGroups.filter(group => group.day === day && group.role === role);
+                  
+                  if (sameDayRoleGroups.length > 0) {
+                    console.log(`Found ${sameDayRoleGroups.length} previous groups for same day/role`);
+                    
+                    // Collect all members from all previous groups for this day/role
+                    const allPreviousGroupMembers = new Set();
+                    sameDayRoleGroups.forEach(group => {
+                      group.members.forEach(member => {
+                        allPreviousGroupMembers.add(member.number);
+                      });
+                    });
+                    
+                    // Try to form a completely different group
+                    const availableForDifferentGroup = availableMembers.filter(m => !allPreviousGroupMembers.has(m.number));
+                    
+                    if (availableForDifferentGroup.length >= toAssign) {
+                      console.log(`Preventing same group formation from all previous weeks. Using different members: ${availableForDifferentGroup.map(m => m.name).join(', ')}`);
+                      availableMembers = availableForDifferentGroup;
+                    } else {
+                      console.log(`Not enough members for completely different group, using all available: ${availableMembers.map(m => m.name).join(', ')}`);
+                    }
+                  }
+                }
+              }
+            }
+          } catch (err) {
+            console.error('Error checking previous week bookings:', err);
+          }
+          
           // Randomly pick members
-          const shuffled = unassigned.sort(() => 0.5 - Math.random());
+          const shuffled = availableMembers.sort(() => 0.5 - Math.random());
           const selected = shuffled.slice(0, toAssign);
           // Assign them
           for (const member of selected) {
