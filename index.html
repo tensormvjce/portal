@@ -365,6 +365,7 @@
       
       .hamburger-btn {
         display: block !important;
+        order: 2;
       }
       
       .nav-buttons {
@@ -377,7 +378,7 @@
         padding: 1rem;
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
         z-index: 1000;
-        display: none;
+        display: none !important;
         flex-direction: column;
         gap: 0.5rem;
         margin-top: 0.5rem;
@@ -385,7 +386,7 @@
       }
       
       .nav-buttons.show {
-        display: flex;
+        display: flex !important;
       }
       
       .nav-buttons button {
@@ -396,7 +397,7 @@
       }
       
       #adminLogoutBtn {
-        margin-left: auto;
+        order: 3;
       }
     }
 
@@ -577,11 +578,6 @@
   <!-- Admin Dashboard Section (hidden by default) -->
   <div id="adminDashboardSection" style="display:none;">
     <nav id="adminNav" class="admin-nav" style="background: var(--surface); padding: 1rem 2rem; display: flex; gap: 1rem; align-items: center; border-radius: var(--border-radius); margin: 2rem auto 1rem; max-width: 1200px; flex-wrap: wrap; position: relative;">
-      <!-- Hamburger Menu Button (Mobile) -->
-      <button id="hamburgerBtn" class="hamburger-btn" style="display: none; background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; padding: 0.5rem;">
-        <i class="fas fa-bars"></i>
-      </button>
-      
       <!-- Navigation Buttons -->
       <div id="navButtons" class="nav-buttons" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
         <button id="navMembers" style="background: var(--primary-gradient); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Members List</button>
@@ -591,6 +587,12 @@
       </div>
       
       <div style="flex:1"></div>
+      
+      <!-- Hamburger Menu Button (Mobile) - Top Right -->
+      <button id="hamburgerBtn" class="hamburger-btn" style="display: none; background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; padding: 0.5rem; margin-left: auto;">
+        <i class="fas fa-bars"></i>
+      </button>
+      
       <button id="adminLogoutBtn" style="background: var(--error); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Logout</button>
     </nav>
     <div id="adminMembersSection" class="container" style="display: block; max-width: 1200px; margin: 0 auto;">
