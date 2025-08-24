@@ -639,6 +639,7 @@
       <button id="navAssign" style="background: var(--surface-light); color: var(--text); border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Assign Tasks</button>
       <button id="navAutoAssign" style="background: var(--surface-light); color: var(--text); border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Auto-Assign</button>
         <button id="advanceCycleBtn" style="background: var(--warning); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Next Week</button>
+        <button id="testSyncBtn" style="background: var(--secondary); color: white; border: none; border-radius: 8px; padding: 0.5rem 1rem; font-weight: 600; cursor: pointer; font-size: 0.8rem;">Test Sync</button>
       </div>
       
       <div style="flex:1"></div>
@@ -1631,27 +1632,26 @@
             const newWeekStart = new Date(snapshot.val());
             const currentStored = localStorage.getItem('tensorCurrentWeekStart');
             
-            if (currentStored) {
-              const currentStoredDate = new Date(currentStored);
-              if (newWeekStart.getTime() !== currentStoredDate.getTime()) {
-                console.log('Week start changed in Firebase, updating locally');
-                localStorage.setItem('tensorCurrentWeekStart', newWeekStart.toISOString());
-                currentWeekStart = newWeekStart;
-                
-                // Reload weeks and refresh display
-                getCurrentActiveWeeks().then(() => {
-                  displaySlots().catch(error => {
-                    console.error('Error refreshing slots after week change:', error);
-                  });
-                  
-                  // If admin dashboard is visible, refresh it too
-                  if (document.getElementById('adminDashboardSection').style.display !== 'none') {
-                    loadAssignTasks();
-                  }
+            // Always update if Firebase has a different value
+            if (!currentStored || newWeekStart.getTime() !== new Date(currentStored).getTime()) {
+              console.log('Week start changed in Firebase, updating locally');
+              localStorage.setItem('tensorCurrentWeekStart', newWeekStart.toISOString());
+              currentWeekStart = newWeekStart;
+              
+              // Reload weeks and refresh display
+              getCurrentActiveWeeks().then(() => {
+                displaySlots().catch(error => {
+                  console.error('Error refreshing slots after week change:', error);
                 });
                 
-                showToast('Week updated from another device!', 'info');
-              }
+                // If admin dashboard is visible, refresh it too
+                if (document.getElementById('adminDashboardSection').style.display !== 'none') {
+                  loadAssignTasks();
+                }
+              });
+              
+              // Show popup message
+              showToast('Week updated from another device!', 'info');
             }
           }
         }, (error) => {
@@ -1780,6 +1780,26 @@
           advanceCycleBtn.classList.remove('loading');
           advanceCycleBtn.innerHTML = 'Next Week';
           advanceCycleBtn.disabled = false;
+        }
+      });
+    }
+
+    // --- Test Sync Button ---
+    const testSyncBtn = document.getElementById('testSyncBtn');
+    if (testSyncBtn) {
+      testSyncBtn.addEventListener('click', async () => {
+        console.log('Test Sync button clicked');
+        
+        // Manually trigger a week change to test the listener
+        const newWeekStart = new Date();
+        newWeekStart.setDate(newWeekStart.getDate() + 7);
+        
+        try {
+          await set(ref(db, 'currentWeekStart'), newWeekStart.toISOString());
+          showToast('Test sync triggered! Check other devices.', 'info');
+        } catch (error) {
+          console.error('Test sync failed:', error);
+          showToast('Test sync failed', 'error');
         }
       });
     }
@@ -2122,6 +2142,9 @@
       
       // Ensure week change listener is active for real-time sync
       ensureWeekChangeListener();
+      
+      // Debug: Test if listener is working
+      console.log('Admin dashboard loaded, week change listener should be active');
     }
 
     // --- Auto-Assign Tab Logic ---
