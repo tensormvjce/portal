@@ -754,7 +754,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, get, set, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { getDatabase, ref, get, set, push, onValue } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
     // Your new Firebase config
@@ -860,18 +860,48 @@
     // Function to get current active weeks using sliding window
     async function getCurrentActiveWeeks() {
       try {
-        // Get current week start from localStorage or calculate it
+        // Try to get current week start from Firebase first (for synchronization)
+        let currentWeekStartFromFirebase = null;
+        try {
+          const weekStartRef = ref(db, 'currentWeekStart');
+          const weekStartSnap = await get(weekStartRef);
+          if (weekStartSnap.exists()) {
+            currentWeekStartFromFirebase = new Date(weekStartSnap.val());
+            console.log('Week start loaded from Firebase:', currentWeekStartFromFirebase);
+          }
+        } catch (firebaseError) {
+          console.log('Firebase week start read failed, using localStorage:', firebaseError);
+        }
+        
+        // Get current week start from localStorage or Firebase or calculate it
         let storedWeekStart = localStorage.getItem('tensorCurrentWeekStart');
         
-        if (storedWeekStart) {
+        if (currentWeekStartFromFirebase) {
+          // Use Firebase value and sync to localStorage
+          currentWeekStart = currentWeekStartFromFirebase;
+          localStorage.setItem('tensorCurrentWeekStart', currentWeekStart.toISOString());
+          console.log('Using Firebase week start, synced to localStorage');
+        } else if (storedWeekStart) {
+          // Use localStorage value
           currentWeekStart = new Date(storedWeekStart);
+          console.log('Using localStorage week start');
         } else {
           // Calculate current week start (Monday)
           const now = new Date();
           const dayOfWeek = now.getDay();
           const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday = 0, Monday = 1
           currentWeekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysToMonday);
+          
+          // Save to both localStorage and Firebase
           localStorage.setItem('tensorCurrentWeekStart', currentWeekStart.toISOString());
+          try {
+            await set(ref(db, 'currentWeekStart'), currentWeekStart.toISOString());
+            console.log('Initial week start saved to Firebase');
+          } catch (firebaseError) {
+            console.log('Firebase initial week start save failed (non-critical):', firebaseError);
+          }
+          
+          console.log('Calculated initial week start');
         }
         
         // Generate 2 weeks: current week + next week
@@ -955,7 +985,17 @@
         // Move current week start forward by 1 week
         if (currentWeekStart) {
           currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+          
+          // Update both localStorage and Firebase for synchronization
           localStorage.setItem('tensorCurrentWeekStart', currentWeekStart.toISOString());
+          
+          try {
+            await set(ref(db, 'currentWeekStart'), currentWeekStart.toISOString());
+            console.log('Week start updated in Firebase:', currentWeekStart);
+          } catch (firebaseError) {
+            console.log('Firebase week start update failed (non-critical):', firebaseError);
+            showToast('Week advanced locally, but Firebase sync failed', 'warning');
+          }
           
           // Reload current weeks
           await getCurrentActiveWeeks();
@@ -1569,6 +1609,45 @@
       }
     }
 
+    // Function to start Firebase real-time listener for week changes
+    function startWeekChangeListener() {
+      try {
+        const weekStartRef = ref(db, 'currentWeekStart');
+        
+        // Listen for changes to currentWeekStart in Firebase
+        onValue(weekStartRef, (snapshot) => {
+          if (snapshot.exists()) {
+            const newWeekStart = new Date(snapshot.val());
+            const currentStored = localStorage.getItem('tensorCurrentWeekStart');
+            
+            if (currentStored) {
+              const currentStoredDate = new Date(currentStored);
+              if (newWeekStart.getTime() !== currentStoredDate.getTime()) {
+                console.log('Week start changed in Firebase, updating locally');
+                localStorage.setItem('tensorCurrentWeekStart', newWeekStart.toISOString());
+                currentWeekStart = newWeekStart;
+                
+                // Reload weeks and refresh display
+                getCurrentActiveWeeks().then(() => {
+                  displaySlots().catch(error => {
+                    console.error('Error refreshing slots after week change:', error);
+                  });
+                });
+                
+                showToast('Week updated from another device!', 'info');
+              }
+            }
+          }
+        }, (error) => {
+          console.log('Firebase week change listener failed:', error);
+        });
+        
+        console.log('Week change listener started');
+      } catch (error) {
+        console.error('Error starting week change listener:', error);
+      }
+    }
+
     window.onload = async function() {
       await getCurrentActiveWeeks();
       displaySlots().catch(error => {
@@ -1577,6 +1656,9 @@
       
       // Start the member countdown timer for main portal
       startMemberCountdownTimer();
+      
+      // Start listening for week changes from other devices
+      startWeekChangeListener();
     }
 
     // --- Routing and Admin Logic ---
