@@ -837,6 +837,13 @@
           1: ['Aug11-Aug17', 'Aug18-Aug24'],
           2: ['Aug25-Aug31', 'Sep1-Sep7'],
           3: ['Sep8-Sep14', 'Sep15-Sep21'],
+          4: ['Sep22-Sep28', 'Sep29-Oct5'],
+          5: ['Oct6-Oct12', 'Oct13-Oct19'],
+          6: ['Oct20-Oct26', 'Oct27-Nov2'],
+          7: ['Nov3-Nov9', 'Nov10-Nov16'],
+          8: ['Nov17-Nov23', 'Nov24-Nov30'],
+          9: ['Dec1-Dec7', 'Dec8-Dec14'],
+          10: ['Dec15-Dec21', 'Dec22-Dec28'],
           // Add more cycles as needed
         };
         
@@ -848,7 +855,7 @@
           // Reload current weeks
           await getCurrentActiveWeeks();
           
-          showToast('Advanced to next 2-week cycle!', 'success');
+          showToast(`Advanced to Cycle ${nextCycle}: ${weekCycles[nextCycle][0]} - ${weekCycles[nextCycle][1]}`, 'success');
         } else {
           showToast('No more cycles available. Please add new cycles.', 'warning');
         }
@@ -1149,9 +1156,17 @@
     const advanceCycleBtn = document.getElementById('advanceCycleBtn');
     if (advanceCycleBtn) {
       advanceCycleBtn.addEventListener('click', async () => {
+        console.log('Advance Cycle button clicked');
+        console.log('Current cycle before:', currentWeekCycle);
+        
         advanceCycleBtn.classList.add('loading');
-        await advanceToNextCycle();
-        advanceCycleBtn.classList.remove('loading');
+        try {
+          await advanceToNextCycle();
+        } catch (error) {
+          console.error('Error in advance cycle button:', error);
+        } finally {
+          advanceCycleBtn.classList.remove('loading');
+        }
       });
     }
 
