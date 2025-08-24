@@ -639,7 +639,6 @@
       <button id="navAssign" style="background: var(--surface-light); color: var(--text); border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Assign Tasks</button>
       <button id="navAutoAssign" style="background: var(--surface-light); color: var(--text); border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Auto-Assign</button>
         <button id="advanceCycleBtn" style="background: var(--warning); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Next Week</button>
-        <button id="testSyncBtn" style="background: var(--secondary); color: white; border: none; border-radius: 8px; padding: 0.5rem 1rem; font-weight: 600; cursor: pointer; font-size: 0.8rem;">Test Sync</button>
       </div>
       
       <div style="flex:1"></div>
@@ -990,19 +989,32 @@
           
           console.log('Advancing week from:', currentWeekStart, 'to:', newWeekStart);
           
-          // Update Firebase FIRST for synchronization
+          // Try to update Firebase for synchronization (might fail due to permissions)
+          let firebaseUpdated = false;
           try {
             await set(ref(db, 'currentWeekStart'), newWeekStart.toISOString());
             console.log('Week start updated in Firebase:', newWeekStart);
+            firebaseUpdated = true;
           } catch (firebaseError) {
-            console.error('Firebase week start update failed:', firebaseError);
-            showToast('Failed to sync with other devices', 'error');
-            return; // Don't proceed if Firebase fails
+            console.log('Firebase week start update failed (permission issue):', firebaseError);
+            // Continue with local update even if Firebase fails
           }
           
           // Update local variables
           currentWeekStart = newWeekStart;
           localStorage.setItem('tensorCurrentWeekStart', currentWeekStart.toISOString());
+          
+          // Update the weekSync path for real-time synchronization
+          try {
+            await set(ref(db, 'weekSync'), {
+              weekStart: newWeekStart.toISOString(),
+              lastUpdate: new Date().toISOString(),
+              deviceId: Math.random().toString(36).substr(2, 9)
+            });
+            console.log('Week sync data saved to Firebase for real-time updates');
+          } catch (syncError) {
+            console.log('Firebase week sync failed:', syncError);
+          }
           
           // Reload current weeks
           await getCurrentActiveWeeks();
@@ -1012,7 +1024,11 @@
             loadAssignTasks();
           }
           
-          showToast('Advanced to next week successfully! All devices will sync.', 'success');
+          if (firebaseUpdated) {
+            showToast('Advanced to next week successfully! All devices will sync.', 'success');
+          } else {
+            showToast('Week advanced locally. Firebase sync failed due to permissions.', 'warning');
+          }
         } else {
           showToast('No current week start found', 'error');
         }
@@ -1624,15 +1640,17 @@
     // Function to start Firebase real-time listener for week changes
     function startWeekChangeListener() {
       try {
-        const weekStartRef = ref(db, 'currentWeekStart');
+        // Try to use the bookings path which should have permissions
+        const weekSyncRef = ref(db, 'weekSync');
         
-        // Listen for changes to currentWeekStart in Firebase
-        onValue(weekStartRef, (snapshot) => {
+        // Listen for changes to weekSync in Firebase
+        onValue(weekSyncRef, (snapshot) => {
           if (snapshot.exists()) {
-            const newWeekStart = new Date(snapshot.val());
+            const syncData = snapshot.val();
+            const newWeekStart = new Date(syncData.weekStart);
             const currentStored = localStorage.getItem('tensorCurrentWeekStart');
             
-            // Always update if Firebase has a different value
+            // Check if week has changed
             if (!currentStored || newWeekStart.getTime() !== new Date(currentStored).getTime()) {
               console.log('Week start changed in Firebase, updating locally');
               localStorage.setItem('tensorCurrentWeekStart', newWeekStart.toISOString());
@@ -1656,11 +1674,55 @@
           }
         }, (error) => {
           console.log('Firebase week change listener failed:', error);
+          // Fallback to polling if real-time fails
+          startWeekChangePolling();
         });
         
-        console.log('Week change listener started');
+        console.log('Week change real-time listener started');
       } catch (error) {
         console.error('Error starting week change listener:', error);
+        // Fallback to polling
+        startWeekChangePolling();
+      }
+    }
+
+    // Fallback polling function if real-time listener fails
+    function startWeekChangePolling() {
+      try {
+        console.log('Starting fallback polling (every 3 seconds)');
+        setInterval(async () => {
+          try {
+            const weekSyncRef = ref(db, 'weekSync');
+            const weekSyncSnap = await get(weekSyncRef);
+            
+            if (weekSyncSnap.exists()) {
+              const syncData = weekSyncSnap.val();
+              const newWeekStart = new Date(syncData.weekStart);
+              const currentStored = localStorage.getItem('tensorCurrentWeekStart');
+              
+              if (!currentStored || newWeekStart.getTime() !== new Date(currentStored).getTime()) {
+                console.log('Week change detected via polling');
+                localStorage.setItem('tensorCurrentWeekStart', newWeekStart.toISOString());
+                currentWeekStart = newWeekStart;
+                
+                await getCurrentActiveWeeks();
+                await displaySlots().catch(error => {
+                  console.error('Error refreshing slots after week change:', error);
+                });
+                
+                if (document.getElementById('adminDashboardSection').style.display !== 'none') {
+                  loadAssignTasks();
+                }
+                
+                showToast('Week updated from another device!', 'info');
+              }
+            }
+          } catch (error) {
+            console.log('Polling failed:', error);
+          }
+        }, 3000);
+      } catch (error) {
+        console.error('Error starting polling fallback:', error);
       }
     }
 
@@ -1784,25 +1846,7 @@
       });
     }
 
-    // --- Test Sync Button ---
-    const testSyncBtn = document.getElementById('testSyncBtn');
-    if (testSyncBtn) {
-      testSyncBtn.addEventListener('click', async () => {
-        console.log('Test Sync button clicked');
-        
-        // Manually trigger a week change to test the listener
-        const newWeekStart = new Date();
-        newWeekStart.setDate(newWeekStart.getDate() + 7);
-        
-        try {
-          await set(ref(db, 'currentWeekStart'), newWeekStart.toISOString());
-          showToast('Test sync triggered! Check other devices.', 'info');
-        } catch (error) {
-          console.error('Test sync failed:', error);
-          showToast('Test sync failed', 'error');
-        }
-      });
-    }
+
 
     // --- Hamburger Menu Functionality ---
     const hamburgerBtn = document.getElementById('hamburgerBtn');
