@@ -984,23 +984,34 @@
       try {
         // Move current week start forward by 1 week
         if (currentWeekStart) {
-          currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+          const newWeekStart = new Date(currentWeekStart);
+          newWeekStart.setDate(currentWeekStart.getDate() + 7);
           
-          // Update both localStorage and Firebase for synchronization
-          localStorage.setItem('tensorCurrentWeekStart', currentWeekStart.toISOString());
+          console.log('Advancing week from:', currentWeekStart, 'to:', newWeekStart);
           
+          // Update Firebase FIRST for synchronization
           try {
-            await set(ref(db, 'currentWeekStart'), currentWeekStart.toISOString());
-            console.log('Week start updated in Firebase:', currentWeekStart);
+            await set(ref(db, 'currentWeekStart'), newWeekStart.toISOString());
+            console.log('Week start updated in Firebase:', newWeekStart);
           } catch (firebaseError) {
-            console.log('Firebase week start update failed (non-critical):', firebaseError);
-            showToast('Week advanced locally, but Firebase sync failed', 'warning');
+            console.error('Firebase week start update failed:', firebaseError);
+            showToast('Failed to sync with other devices', 'error');
+            return; // Don't proceed if Firebase fails
           }
+          
+          // Update local variables
+          currentWeekStart = newWeekStart;
+          localStorage.setItem('tensorCurrentWeekStart', currentWeekStart.toISOString());
           
           // Reload current weeks
           await getCurrentActiveWeeks();
           
-          showToast('Advanced to next week successfully!', 'success');
+          // Refresh admin displays
+          if (document.getElementById('adminDashboardSection').style.display !== 'none') {
+            loadAssignTasks();
+          }
+          
+          showToast('Advanced to next week successfully! All devices will sync.', 'success');
         } else {
           showToast('No current week start found', 'error');
         }
@@ -1632,6 +1643,11 @@
                   displaySlots().catch(error => {
                     console.error('Error refreshing slots after week change:', error);
                   });
+                  
+                  // If admin dashboard is visible, refresh it too
+                  if (document.getElementById('adminDashboardSection').style.display !== 'none') {
+                    loadAssignTasks();
+                  }
                 });
                 
                 showToast('Week updated from another device!', 'info');
@@ -1729,16 +1745,41 @@
     const advanceCycleBtn = document.getElementById('advanceCycleBtn');
     if (advanceCycleBtn) {
       advanceCycleBtn.addEventListener('click', async () => {
+        // Prevent multiple clicks
+        if (advanceCycleBtn.classList.contains('loading')) {
+          return;
+        }
+        
         console.log('Advance Week button clicked');
         console.log('Current week start before:', currentWeekStart);
         
+        // Show loading state
         advanceCycleBtn.classList.add('loading');
+        advanceCycleBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>Advancing...';
+        advanceCycleBtn.disabled = true;
+        
         try {
           await advanceToNextWeek();
+          
+          // Show success state briefly
+          advanceCycleBtn.innerHTML = '<i class="fas fa-check" style="margin-right: 0.5rem;"></i>Advanced!';
+          advanceCycleBtn.style.background = 'var(--success)';
+          
+          // Reset button after 2 seconds
+          setTimeout(() => {
+            advanceCycleBtn.classList.remove('loading');
+            advanceCycleBtn.innerHTML = 'Next Week';
+            advanceCycleBtn.style.background = 'var(--warning)';
+            advanceCycleBtn.disabled = false;
+          }, 2000);
+          
         } catch (error) {
           console.error('Error in advance week button:', error);
-        } finally {
+          
+          // Reset button on error
           advanceCycleBtn.classList.remove('loading');
+          advanceCycleBtn.innerHTML = 'Next Week';
+          advanceCycleBtn.disabled = false;
         }
       });
     }
@@ -1820,6 +1861,16 @@
         navAssign.style.background = 'var(--surface-light)';
         navAssign.style.color = 'var(--text)';
       });
+    }
+
+    // Function to ensure week change listener is active for admin dashboard
+    function ensureWeekChangeListener() {
+      // Start the listener if not already started
+      if (!window.weekChangeListenerActive) {
+        startWeekChangeListener();
+        window.weekChangeListenerActive = true;
+        console.log('Week change listener activated for admin dashboard');
+      }
     }
 
     // --- Members List Logic ---
@@ -2068,6 +2119,9 @@
       
       // Start the auto-assign timer
       startAutoAssignTimer();
+      
+      // Ensure week change listener is active for real-time sync
+      ensureWeekChangeListener();
     }
 
     // --- Auto-Assign Tab Logic ---
