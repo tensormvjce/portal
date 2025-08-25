@@ -1,4 +1,45 @@
 <!DOCTYPE html>
+<!-- 
+FIREBASE RULES UPDATE REQUIRED:
+
+The current Firebase rules are too restrictive and preventing members from loading.
+This causes auto-assign functionality to fail.
+
+UPDATE THESE RULES IN FIREBASE CONSOLE:
+
+{
+  "rules": {
+    "bookings": {
+      ".read": true,
+      "$week": {
+        "$day": {
+          "$role": {
+            ".write": true,
+            "$bookingId": {
+              ".validate": "newData.exists() && !data.exists()"
+            }
+          }
+        }
+      }
+    },
+    "members": {
+      ".read": true,  // Allow reading for auto-assign to work
+      ".write": "auth != null && auth.uid === 'GjBCSLAzhYXZmPGCiQjuY63'"
+    },
+    "adminWeek": {
+      ".read": true,
+      ".write": "auth != null && auth.uid === 'GjBCSLAzhYXZmPGCiQjuY63'"
+    },
+    ".read": false,
+    ".write": false
+  }
+}
+
+KEY CHANGES:
+1. Changed "members" .read from restricted to true
+2. This allows auto-assign to read member data
+3. Write access still restricted to admin only
+-->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -399,10 +440,6 @@
       #adminLogoutBtn {
         order: 3;
       }
-      
-      .auto-assign-timer {
-        display: none !important;
-      }
     }
 
     @media (min-width: 769px) {
@@ -450,6 +487,67 @@
       transition: width 0.3s ease;
     }
 
+    /* Countdown Banner Styles */
+    .countdown-banner {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      margin: 0 auto 2rem;
+      max-width: 1200px;
+      border-radius: var(--border-radius);
+      padding: 1.5rem 2rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      animation: slideDown 0.5s ease forwards;
+    }
+
+    .countdown-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .countdown-message {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      color: white;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .countdown-message i {
+      font-size: 1.5rem;
+      animation: pulse 2s infinite;
+    }
+
+    .countdown-timer {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .countdown-timer span {
+      color: white;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 1.3rem;
+      letter-spacing: 2px;
+    }
+
+    @media (max-width: 768px) {
+      .countdown-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+      }
+      
+      .countdown-timer {
+        width: 100%;
+        text-align: center;
+      }
+    }
+
     .toast-container {
       position: fixed;
       top: 1rem;
@@ -484,38 +582,6 @@
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
-
-    /* Member Countdown Animations */
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.02); }
-      100% { transform: scale(1); }
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-2px); }
-      75% { transform: translateX(2px); }
-    }
-
-    @keyframes bounce {
-      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-      40% { transform: translateY(-5px); }
-      60% { transform: translateY(-3px); }
-    }
-
-    #memberCountdownMessage {
-      transition: all 0.3s ease;
-      animation: pulse 2s infinite;
-    }
-
-    #memberCountdownMessage.urgent {
-      animation: shake 0.5s infinite;
-    }
-
-    #memberCountdownMessage.critical {
-      animation: bounce 0.8s infinite;
-    }
   </style>
 </head>
 <body>
@@ -526,6 +592,19 @@
   <canvas></canvas>
   
   <div id="mainPortal">
+  <!-- Countdown Banner -->
+  <div id="countdownBanner" class="countdown-banner" style="display: none;">
+    <div class="countdown-content">
+      <div class="countdown-message">
+        <i class="fas fa-clock"></i>
+        <span id="countdownText">⏰ Time's ticking! Book your slots before the deadline!</span>
+      </div>
+      <div class="countdown-timer">
+        <span id="countdownDisplay">--:--:--</span>
+      </div>
+    </div>
+  </div>
+  
   <div class="container">
     <div class="card form-card">
       <div class="title">
@@ -579,25 +658,6 @@
     </div>
 
     <div class="card">
-      <!-- Fun Countdown Message for Members - Inside Current Bookings Card -->
-      <div id="memberCountdownMessage" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(16, 185, 129, 0.08)); border: 2px solid rgba(99, 102, 241, 0.2); border-radius: 12px; margin-bottom: 2rem; padding: 1.5rem; position: relative; overflow: hidden;">
-        <!-- Decorative Elements -->
-        <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; background: rgba(99, 102, 241, 0.1); border-radius: 50%;"></div>
-        <div style="position: absolute; bottom: -15px; left: -15px; width: 80px; height: 80px; background: rgba(16, 185, 129, 0.1); border-radius: 50%;"></div>
-        
-        <div style="text-align: center; position: relative; z-index: 1;">
-          <div style="font-size: 1.3rem; font-weight: 700; color: var(--primary); margin-bottom: 0.8rem; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
-            ⏰ <span id="memberTimerDisplay">Loading...</span>
-          </div>
-          <div style="font-size: 1rem; color: var(--text); margin-bottom: 0.8rem; font-weight: 500;">
-            <span id="memberMessageDisplay">🎯 Book your slots before the timer runs out!</span>
-          </div>
-          <div style="font-size: 0.9rem; color: var(--text-muted); font-style: italic; line-height: 1.4;">
-            <span id="memberSubMessageDisplay">⏳ Don't wait too long, or the AI will pick for you! 🤖</span>
-          </div>
-        </div>
-      </div>
-      
       <h2 style="text-align: center; margin-bottom: 2rem; font-family: 'Montserrat', sans-serif;">Current Bookings</h2>
       <div class="slots-list" id="slotAvailability">
         <div class="firebase-loading">
@@ -638,16 +698,9 @@
       <button id="navMembers" style="background: var(--primary-gradient); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Members List</button>
       <button id="navAssign" style="background: var(--surface-light); color: var(--text); border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Assign Tasks</button>
       <button id="navAutoAssign" style="background: var(--surface-light); color: var(--text); border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Auto-Assign</button>
-        <button id="advanceCycleBtn" style="background: var(--warning); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600; cursor: pointer;">Next Week</button>
       </div>
       
       <div style="flex:1"></div>
-      
-      <!-- Auto-Assign Timer Display -->
-      <div id="autoAssignTimer" class="auto-assign-timer" style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; margin-right: 1rem;">
-        <div style="font-size: 0.8rem; color: var(--secondary); font-weight: 600;">Next Auto-Assign</div>
-        <div id="timerDisplay" style="font-size: 0.9rem; color: var(--text); font-weight: 500;">Loading...</div>
-      </div>
       
       <!-- Hamburger Menu Button (Mobile) - Top Right -->
       <button id="hamburgerBtn" class="hamburger-btn" style="display: none; background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; padding: 0.5rem; margin-left: auto;">
@@ -724,22 +777,6 @@
           <button type="submit" style="min-width: 150px;">Auto Assign</button>
         </form>
         <div id="autoAssignResult" style="margin-top:2rem;"></div>
-        
-        <!-- Manual Auto-Assign Trigger -->
-        <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px;">
-          <h4 style="margin-bottom: 1rem; color: var(--secondary);">Manual Auto-Assign</h4>
-          <p style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem;">
-            Use this button to manually trigger auto-assignment for the current cycle. 
-            The system will respect all break logic and group prevention rules.
-          </p>
-          <button id="manualAutoAssignBtn" style="background: var(--secondary); color: white; border: none; border-radius: 8px; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer; transition: var(--transition);">
-            <i class="fas fa-magic" style="margin-right: 0.5rem;"></i>
-            Run Auto-Assign Now
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
       </div>
     </div>
   </div>
@@ -754,7 +791,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, get, set, push, onValue } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { getDatabase, ref, get, set, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
     // Your new Firebase config
@@ -773,9 +810,11 @@
     const db = getDatabase(app);
     const auth = getAuth(app);
 
-    // Current active weeks - sliding 2-week window
+    // Current active weeks - only 2 weeks at a time
     let dateRanges = {};
-    let currentWeekStart = null; // Track the start of current week
+    let currentWeekCycle = 1; // Track which 2-week cycle we're in
+    let countdownInterval = null;
+    let currentActiveWeek = null; // The week users can currently book for
     
     // Function to generate date range for a given week
     function generateDateRange(weekKey) {
@@ -820,153 +859,117 @@
         }
       };
     }
-
-    // Function to generate week key from start and end dates
-    function generateWeekKey(startDate, endDate) {
-      const startMonth = startDate.toLocaleDateString('en-US', { month: 'short' });
-      const startDay = startDate.getDate();
-      const endMonth = endDate.toLocaleDateString('en-US', { month: 'short' });
-      const endDay = endDate.getDate();
-      
-      return `${startMonth}${startDay}-${endMonth}${endDay}`;
-    }
-
-    // Function to generate date range from start and end dates
-    function generateDateRangeFromDates(startDate, endDate) {
-      // Find Wednesday and Sunday in this range
-      const wednesday = new Date(startDate);
-      while (wednesday.getDay() !== 3) { // 3 = Wednesday
-        wednesday.setDate(wednesday.getDate() + 1);
-      }
-      
-      const sunday = new Date(startDate);
-      while (sunday.getDay() !== 0) { // 0 = Sunday
-        sunday.setDate(sunday.getDate() + 1);
-      }
-      
-      return {
-        start: startDate,
-        end: endDate,
-        days: {
-          'Wednesday': wednesday,
-          'Sunday': {
-            date: sunday,
-            postType: 'video' // Default to video for new weeks
-          }
-        }
-      };
-    }
     
-    // Function to get current active weeks using sliding window
+    // Function to get current active weeks (only 2 weeks)
     async function getCurrentActiveWeeks() {
       try {
-        // Try to get current week start from Firebase first (for synchronization)
-        let currentWeekStartFromFirebase = null;
-        try {
-          const weekStartRef = ref(db, 'currentWeekStart');
-          const weekStartSnap = await get(weekStartRef);
-          if (weekStartSnap.exists()) {
-            currentWeekStartFromFirebase = new Date(weekStartSnap.val());
-            console.log('Week start loaded from Firebase:', currentWeekStartFromFirebase);
-          }
-        } catch (firebaseError) {
-          console.log('Firebase week start read failed, using localStorage:', firebaseError);
+        // Check if there's a current cycle setting in Firebase
+        const cycleRef = ref(db, 'currentCycle');
+        const cycleSnapshot = await get(cycleRef);
+        
+        if (cycleSnapshot.exists()) {
+          currentWeekCycle = cycleSnapshot.val().cycle || 1;
         }
         
-        // Get current week start from localStorage or Firebase or calculate it
-        let storedWeekStart = localStorage.getItem('tensorCurrentWeekStart');
+        // Define week cycles - each cycle has 2 weeks
+        const weekCycles = {
+          1: ['Aug11-Aug17', 'Aug18-Aug24'],
+          2: ['Aug25-Aug31', 'Sep1-Sep7'],
+          3: ['Sep8-Sep14', 'Sep15-Sep21'],
+          4: ['Sep22-Sep28', 'Sep29-Oct5'],
+          5: ['Oct6-Oct12', 'Oct13-Oct19'],
+          6: ['Oct20-Oct26', 'Oct27-Nov2'],
+          7: ['Nov3-Nov9', 'Nov10-Nov16'],
+          8: ['Nov17-Nov23', 'Nov24-Nov30'],
+          9: ['Dec1-Dec7', 'Dec8-Dec14'],
+          10: ['Dec15-Dec21', 'Dec22-Dec28'],
+          // Add more cycles as needed
+        };
         
-        if (currentWeekStartFromFirebase) {
-          // Use Firebase value and sync to localStorage
-          currentWeekStart = currentWeekStartFromFirebase;
-          localStorage.setItem('tensorCurrentWeekStart', currentWeekStart.toISOString());
-          console.log('Using Firebase week start, synced to localStorage');
-        } else if (storedWeekStart) {
-          // Use localStorage value
-          currentWeekStart = new Date(storedWeekStart);
-          console.log('Using localStorage week start');
-        } else {
-          // Calculate current week start (Monday)
-          const now = new Date();
-          const dayOfWeek = now.getDay();
-          const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday = 0, Monday = 1
-          currentWeekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysToMonday);
-          
-          // Save to both localStorage and Firebase
-          localStorage.setItem('tensorCurrentWeekStart', currentWeekStart.toISOString());
-          try {
-            await set(ref(db, 'currentWeekStart'), currentWeekStart.toISOString());
-            console.log('Initial week start saved to Firebase');
-          } catch (firebaseError) {
-            console.log('Firebase initial week start save failed (non-critical):', firebaseError);
-          }
-          
-          console.log('Calculated initial week start');
-        }
+        // For now, show Aug 25-31 (completed) and Sep 1-7 (current)
+        // After 7 PM Aug 31, this will automatically advance to show Sep 1-7 (completed) and Sep 8-14 (current)
+        const currentWeeks = weekCycles[currentWeekCycle] || weekCycles[2]; // Default to cycle 2 (Aug25-Sep7)
         
-        // Generate 2 weeks: current week + next week
+        // Generate date ranges for current 2 weeks
         dateRanges = {};
+        currentWeeks.forEach(weekKey => {
+          const range = generateDateRange(weekKey);
+          if (range) {
+            dateRanges[weekKey] = range;
+          }
+        });
         
-        // Week 1: Current week (Monday to Sunday)
-        const week1Start = new Date(currentWeekStart);
-        const week1End = new Date(week1Start);
-        week1End.setDate(week1Start.getDate() + 6);
+        // Set current active week (the week users can book for)
+        currentActiveWeek = currentWeeks[1]; // Second week of the cycle is the active week
         
-        const week1Key = generateWeekKey(week1Start, week1End);
-        const week1Range = generateDateRangeFromDates(week1Start, week1End);
-        if (week1Range) {
-          dateRanges[week1Key] = week1Range;
-        }
-        
-        // Week 2: Next week (Monday to Sunday)
-        const week2Start = new Date(week1Start);
-        week2Start.setDate(week1Start.getDate() + 7);
-        const week2End = new Date(week2Start);
-        week2End.setDate(week2Start.getDate() + 6);
-        
-        const week2Key = generateWeekKey(week2Start, week2End);
-        const week2Range = generateDateRangeFromDates(week2Start, week2End);
-        if (week2Range) {
-          dateRanges[week2Key] = week2Range;
-        }
+        console.log('Current weeks:', currentWeeks);
+        console.log('Current active week:', currentActiveWeek);
+        console.log('Date ranges:', dateRanges);
         
         // Update dropdowns with current 2 weeks
         updateWeekDropdowns();
         
-        console.log('Current weeks loaded:', Object.keys(dateRanges));
+        // Start countdown for the current active week
+        if (currentActiveWeek) {
+          startCountdown(currentActiveWeek);
+        } else {
+          console.log('No current active week set');
+        }
         
       } catch (error) {
         console.error('Error loading current weeks:', error);
-        // Fallback to current date-based weeks
-        const now = new Date();
-        const currentWeekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const week1Key = generateWeekKey(currentWeekStart, new Date(currentWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000));
-        const week2Key = generateWeekKey(new Date(currentWeekStart.getTime() + 7 * 24 * 60 * 60 * 1000), new Date(currentWeekStart.getTime() + 13 * 24 * 60 * 60 * 1000));
+        // Fallback to default weeks - use cycle 2 (Aug25-Sep7)
+        console.log('Using fallback weeks');
+        const fallbackWeeks = ['Aug25-Aug31', 'Sep1-Sep7'];
+        dateRanges = {};
+        fallbackWeeks.forEach(weekKey => {
+          const range = generateDateRange(weekKey);
+          if (range) {
+            dateRanges[weekKey] = range;
+          }
+        });
         
-        dateRanges[week1Key] = generateDateRangeFromDates(currentWeekStart, new Date(currentWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000));
-        dateRanges[week2Key] = generateDateRangeFromDates(new Date(currentWeekStart.getTime() + 7 * 24 * 60 * 60 * 1000), new Date(currentWeekStart.getTime() + 13 * 24 * 60 * 60 * 1000));
+        // Set current active week
+        currentActiveWeek = fallbackWeeks[1]; // Sep1-Sep7
+        currentWeekCycle = 2;
+        
+        console.log('Fallback weeks set:', fallbackWeeks);
+        console.log('Fallback current active week:', currentActiveWeek);
         
         updateWeekDropdowns();
+        
+        // Start countdown for the fallback week
+        if (currentActiveWeek) {
+          startCountdown(currentActiveWeek);
+        }
       }
     }
     
-    // Function to update week dropdowns (only show 2 weeks)
+    // Function to update week dropdowns (only show current active week for users, all weeks for admin)
     function updateWeekDropdowns() {
       const weekKeys = Object.keys(dateRanges).sort();
       
-      // Update main form dropdown
+      console.log('Updating dropdowns with weekKeys:', weekKeys);
+      console.log('Current active week:', currentActiveWeek);
+      
+      // Update main form dropdown - only show current active week for users
       const dateRangeSelect = document.getElementById('dateRangeSelect');
       if (dateRangeSelect) {
         dateRangeSelect.innerHTML = '<option value="" disabled selected>Select week</option>';
-        weekKeys.forEach((weekKey, index) => {
+        if (currentActiveWeek && dateRanges[currentActiveWeek]) {
           const option = document.createElement('option');
-          option.value = weekKey;
-          option.textContent = `Week ${index + 1}: ${weekKey.replace('-', ' - ')}`;
+          option.value = currentActiveWeek;
+          option.textContent = `Slots Open: ${currentActiveWeek.replace('-', ' - ')}`;
           dateRangeSelect.appendChild(option);
-        });
+          console.log('Added option for current active week:', currentActiveWeek);
+        } else {
+          console.log('Could not add current active week option:', { currentActiveWeek, hasDateRange: !!dateRanges[currentActiveWeek] });
+        }
+      } else {
+        console.log('Date range select element not found');
       }
       
-      // Update admin auto-assign dropdown
+      // Update admin auto-assign dropdown - show all weeks for admin
       const autoDateRange = document.getElementById('autoDateRange');
       if (autoDateRange) {
         autoDateRange.innerHTML = '<option value="" disabled selected>Select week</option>';
@@ -979,446 +982,369 @@
       }
     }
     
-    // Function to advance to next week (admin function)
-    async function advanceToNextWeek() {
-      try {
-        // Move current week start forward by 1 week
-        if (currentWeekStart) {
-          const newWeekStart = new Date(currentWeekStart);
-          newWeekStart.setDate(currentWeekStart.getDate() + 7);
-          
-          console.log('Advancing week from:', currentWeekStart, 'to:', newWeekStart);
-          
-          // Try to update Firebase for synchronization (might fail due to permissions)
-          let firebaseUpdated = false;
-          try {
-            await set(ref(db, 'currentWeekStart'), newWeekStart.toISOString());
-            console.log('Week start updated in Firebase:', newWeekStart);
-            firebaseUpdated = true;
-          } catch (firebaseError) {
-            console.log('Firebase week start update failed (permission issue):', firebaseError);
-            // Continue with local update even if Firebase fails
-          }
-          
-          // Update local variables
-          currentWeekStart = newWeekStart;
-          localStorage.setItem('tensorCurrentWeekStart', currentWeekStart.toISOString());
-          
-          // Update the weekSync path for real-time synchronization
-          try {
-            await set(ref(db, 'weekSync'), {
-              weekStart: newWeekStart.toISOString(),
-              lastUpdate: new Date().toISOString(),
-              deviceId: Math.random().toString(36).substr(2, 9)
-            });
-            console.log('Week sync data saved to Firebase for real-time updates');
-          } catch (syncError) {
-            console.log('Firebase week sync failed:', syncError);
-          }
-          
-          // Reload current weeks
-          await getCurrentActiveWeeks();
-          
-          // Refresh admin displays
-          if (document.getElementById('adminDashboardSection').style.display !== 'none') {
-            loadAssignTasks();
-          }
-          
-          if (firebaseUpdated) {
-            showToast('Advanced to next week successfully! All devices will sync.', 'success');
-          } else {
-            showToast('Week advanced locally. Firebase sync failed due to permissions.', 'warning');
-          }
-        } else {
-          showToast('No current week start found', 'error');
-        }
-      } catch (error) {
-        console.error('Error advancing to next week:', error);
-        showToast('Failed to advance to next week', 'error');
-      }
+    // Function to get deadline for a week (7 PM IST on the last day of the current week, not the week being booked)
+    function getWeekDeadline(weekKey) {
+      // The deadline is 7 PM IST on the last day of the CURRENT week (Aug 31)
+      // not the last day of the week being booked (Sep 7)
+      
+      // Get the current week's end date (Aug 31)
+      const currentWeekEnd = new Date(2025, 7, 31); // Aug 31, 2025
+      currentWeekEnd.setHours(19, 0, 0, 0); // 7 PM IST
+      
+      return currentWeekEnd;
     }
 
-    // Auto-Assign Timer System
-    let autoAssignInterval;
-    let lastAutoAssignDate = null;
-
-    // Function to get next Sunday 7:00 PM IST
-    function getNextSunday7PM() {
-      const now = new Date();
-      const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
-      const istNow = new Date(now.getTime() + istOffset);
-      
-      // Find next Sunday
-      let nextSunday = new Date(istNow);
-      const daysUntilSunday = (7 - nextSunday.getDay()) % 7;
-      if (daysUntilSunday === 0 && istNow.getHours() >= 19) {
-        // If it's Sunday and past 7 PM, get next Sunday
-        nextSunday.setDate(nextSunday.getDate() + 7);
-      } else {
-        nextSunday.setDate(nextSunday.getDate() + daysUntilSunday);
-      }
-      
-      // Set to 7:00 PM IST
-      nextSunday.setHours(19, 0, 0, 0);
-      
-      // Convert back to UTC
-      return new Date(nextSunday.getTime() - istOffset);
-    }
-
-    // Function to update countdown timer
-    function updateCountdownTimer() {
-      const nextSunday7PM = getNextSunday7PM();
-      const now = new Date();
-      const timeDiff = nextSunday7PM.getTime() - now.getTime();
-      
-      if (timeDiff <= 0) {
-        // Time to auto-assign!
-        runAutoAssignForCurrentCycle();
+    // Function to start countdown timer
+    function startCountdown(weekKey) {
+      console.log('Starting countdown for week:', weekKey);
+      const deadline = getWeekDeadline(weekKey);
+      if (!deadline) {
+        console.log('No deadline found for week:', weekKey);
         return;
       }
       
-      const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+      console.log('Deadline set for:', deadline);
       
-      // Update admin timer
-      const timerDisplay = document.getElementById('timerDisplay');
-      if (timerDisplay) {
-        if (days > 0) {
-          timerDisplay.textContent = `${days}d ${hours}h ${minutes}m`;
-        } else if (hours > 0) {
-          timerDisplay.textContent = `${hours}h ${minutes}m ${seconds}s`;
-        } else {
-          timerDisplay.textContent = `${minutes}m ${seconds}s`;
+      // Show countdown banner
+      const banner = document.getElementById('countdownBanner');
+      const countdownText = document.getElementById('countdownText');
+      const countdownDisplay = document.getElementById('countdownDisplay');
+      
+      console.log('Banner elements:', { banner, countdownText, countdownDisplay });
+      
+      if (banner && countdownText && countdownDisplay) {
+        banner.style.display = 'block';
+        console.log('Countdown banner displayed');
+        
+        // Update countdown text based on current week
+        const range = generateDateRange(weekKey);
+        if (range) {
+          countdownText.innerHTML = `⏰ <strong>Deadline approaching!</strong> Book your slots for <strong>${weekKey.replace('-', ' - ')}</strong> before 7 PM IST on Aug 31!`;
         }
+      } else {
+        console.log('Some countdown elements not found');
+        // Try again after a short delay in case DOM is not ready
+        setTimeout(() => {
+          startCountdown(weekKey);
+        }, 1000);
+        return;
       }
       
-      // Update member timer and messages
-      updateMemberCountdownDisplay(days, hours, minutes, seconds);
+      // Clear existing interval
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+      }
+      
+      // Start countdown with slot checking
+      countdownInterval = setInterval(async () => {
+        const now = new Date();
+        const timeLeft = deadline - now;
+        
+        if (timeLeft <= 0) {
+          // Time's up! Auto-advance to next week
+          clearInterval(countdownInterval);
+          autoAdvanceToNextWeek(weekKey);
+          return;
+        }
+        
+        // Check if all slots are filled
+        const allSlotsFilled = await checkIfAllSlotsFilled(weekKey);
+        if (allSlotsFilled) {
+          // All slots filled - update banner
+          if (banner && countdownText && countdownDisplay) {
+            countdownText.innerHTML = `🎉 <strong>All slots filled!</strong> Wait for the next week to open!`;
+            countdownDisplay.textContent = 'Stay tuned!';
+          }
+          return; // Stop countdown
+        }
+        
+        // Update countdown display
+        const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+        
+        if (countdownDisplay) {
+          if (days > 0) {
+            countdownDisplay.textContent = `${days}d ${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
+          } else {
+            countdownDisplay.textContent = `${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
+          }
+        }
+      }, 1000);
     }
 
-    // Function to update member countdown display with fun messages
-    function updateMemberCountdownDisplay(days, hours, minutes, seconds) {
-      const memberTimerDisplay = document.getElementById('memberTimerDisplay');
-      const memberMessageDisplay = document.getElementById('memberMessageDisplay');
-      const memberSubMessageDisplay = document.getElementById('memberSubMessageDisplay');
-      
-      if (!memberTimerDisplay || !memberMessageDisplay || !memberSubMessageDisplay) return;
-      
-      // Update timer display
-      if (days > 0) {
-        memberTimerDisplay.textContent = `${days} days, ${hours} hours, ${minutes} minutes`;
-      } else if (hours > 0) {
-        memberTimerDisplay.textContent = `${hours} hours, ${minutes} minutes, ${seconds} seconds`;
-      } else if (minutes > 0) {
-        memberTimerDisplay.textContent = `${minutes} minutes, ${seconds} seconds`;
-      } else {
-        memberTimerDisplay.textContent = `${seconds} seconds`;
-      }
-      
-      // Get the next week (Week 2) that needs filling
-      const weekKeys = Object.keys(dateRanges).sort();
-      const nextWeekKey = weekKeys.length >= 2 ? weekKeys[1] : 'Next Week';
-      
-      // Dynamic fun messages based on time remaining
-      let mainMessage, subMessage;
-      
-      if (days > 2) {
-        mainMessage = `🎯 Plenty of time to pick your perfect slot for ${nextWeekKey}!`;
-        subMessage = "⏳ But don't procrastinate too much! 🐌";
-      } else if (days > 1) {
-        mainMessage = `🚀 Weekend is coming! Book your slots for ${nextWeekKey} now!`;
-        subMessage = "⏰ The AI is getting restless... 🤖";
-      } else if (days > 0) {
-        mainMessage = `🔥 Last day to book ${nextWeekKey}! Don't miss out!`;
-        subMessage = "⚡ The AI is warming up its assignment engine! 🚀";
-      } else if (hours > 12) {
-        mainMessage = `⏰ Less than a day left to book ${nextWeekKey}!`;
-        subMessage = "🤖 The AI is preparing to take over!";
-      } else if (hours > 6) {
-        mainMessage = `⚡ Only a few hours left to book ${nextWeekKey}!`;
-        subMessage = "🤖 The AI is getting impatient! ⚡";
-      } else if (hours > 1) {
-        mainMessage = `🚨 Final countdown to book ${nextWeekKey}! Book NOW!`;
-        subMessage = "🤖 The AI is almost ready to assign! 🚀";
-      } else if (minutes > 30) {
-        mainMessage = `💥 Less than an hour to book ${nextWeekKey}! Last chance!`;
-        subMessage = "🤖 The AI is counting down with you! ⏰";
-      } else if (minutes > 10) {
-        mainMessage = `🚨 EMERGENCY! Less than 30 minutes to book ${nextWeekKey}!`;
-        subMessage = "🤖 The AI is getting excited! 🎉";
-      } else if (minutes > 1) {
-        mainMessage = `🔥 FINAL MINUTES to book ${nextWeekKey}! Book now!`;
-        subMessage = "🤖 The AI is ready to pounce! 🐾";
-      } else {
-        mainMessage = `💀 TOO LATE! The AI is taking over ${nextWeekKey}!`;
-        subMessage = "🤖 Auto-assignment in progress... 🚀";
-      }
-      
-      memberMessageDisplay.textContent = mainMessage;
-      memberSubMessageDisplay.textContent = subMessage;
-      
-      // Simple visual urgency indicator
-      const countdownCard = document.getElementById('memberCountdownMessage');
-      if (countdownCard) {
-        countdownCard.className = days > 1 ? 'card' : hours > 6 ? 'card urgent' : 'card critical';
-      }
-    }
-
-    // Function to run auto-assign for current cycle
-    async function runAutoAssignForCurrentCycle() {
+    // Function to check if all slots are filled for a week
+    async function checkIfAllSlotsFilled(weekKey) {
       try {
-        console.log('Running auto-assign for current cycle...');
-        
-        // Auto-assign for the NEXT week (week 2) only
-        const weekKeys = Object.keys(dateRanges).sort();
-        if (weekKeys.length >= 2) {
-          const nextWeekKey = weekKeys[1]; // Week 2 is the next week
-          const rangeObj = dateRanges[nextWeekKey];
-          
-          console.log('Auto-assigning for next week:', nextWeekKey);
-          
-          // Auto-assign for each day and role in the next week
-          Object.entries(rangeObj.days).forEach(async ([day, dayObj]) => {
-            let roles = [];
-            if (day === 'Sunday') {
-              roles = ['Content', 'Design'];
-            } else if (day === 'Wednesday') {
-              roles = ['BlogPost'];
-            }
-            
-            for (const role of roles) {
-              await autoAssignForSlot(nextWeekKey, day, role);
-            }
-          });
+        // Get the expected structure for this week
+        const expectedStructure = dateRanges[weekKey];
+        if (!expectedStructure) {
+          return false;
         }
         
-        // Update last auto-assign date
-        const currentDate = new Date();
-        localStorage.setItem('lastAutoAssignDate', currentDate.toISOString());
-        lastAutoAssignDate = currentDate.toISOString();
+        const bookingsRef = ref(db, `bookings/${weekKey}`);
+        const snapshot = await get(bookingsRef);
         
-        showToast('Auto-assignment completed successfully!', 'success');
+        let totalSlots = 0;
+        let filledSlots = 0;
         
-        // Refresh displays
-        loadAssignTasks();
-        displaySlots();
+        // Calculate expected slots based on dateRanges structure
+        Object.entries(expectedStructure.days).forEach(([day, dayData]) => {
+          if (day === 'Wednesday') {
+            totalSlots += 1; // BlogPost has 1 slot
+          } else if (day === 'Sunday') {
+            totalSlots += 6; // Content + Design, 3 slots each
+          }
+        });
+        
+        if (!snapshot.exists()) {
+          return false;
+        }
+        
+        const bookings = snapshot.val();
+        
+        // Count actual filled slots
+        Object.entries(bookings).forEach(([day, dayData]) => {
+          Object.entries(dayData).forEach(([role, roleData]) => {
+            const currentBookings = Object.values(roleData);
+            filledSlots += currentBookings.length;
+          });
+        });
+        
+        return filledSlots >= totalSlots;
         
       } catch (error) {
-        console.error('Error in auto-assign:', error);
-        showToast('Auto-assignment failed', 'error');
+        console.error('Error checking slots:', error);
+        return false;
       }
     }
 
-    // Function to auto-assign for a specific slot
-    async function autoAssignForSlot(range, day, role) {
+    // Function to auto-advance to next week
+    async function autoAdvanceToNextWeek(currentWeekKey) {
+      try {
+        console.log(`Auto-advancing from ${currentWeekKey} to next week`);
+        
+        // First, auto-fill any empty slots for the current week
+        await autoFillEmptySlots(currentWeekKey);
+        
+        // Then advance to the next week
+        const nextWeekKey = getNextWeekKey(currentWeekKey);
+        if (nextWeekKey) {
+          // Update current active week
+          currentActiveWeek = nextWeekKey;
+          
+          // Get the next cycle and update dateRanges
+          const nextCycle = currentWeekCycle + 1;
+          if (nextCycle <= 10) { // Assuming max 10 cycles for now
+            currentWeekCycle = nextCycle;
+            
+            // Update Firebase with new cycle
+            await set(ref(db, 'currentCycle'), { cycle: nextCycle });
+            
+            // Reload weeks with new cycle
+            await getCurrentActiveWeeks();
+            
+            showToast('Advanced to next week automatically!', 'success');
+            
+            // Start countdown for the new week
+            startCountdown(nextWeekKey);
+          }
+        }
+      } catch (error) {
+        console.error('Error auto-advancing:', error);
+      }
+    }
+
+    // Function to get next week key
+    function getNextWeekKey(currentWeekKey) {
+      const weekCycles = {
+        1: ['Aug11-Aug17', 'Aug18-Aug24'],
+        2: ['Aug25-Aug31', 'Sep1-Sep7'],
+        3: ['Sep8-Sep14', 'Sep15-Sep21'],
+        4: ['Sep22-Sep28', 'Sep29-Oct5'],
+        5: ['Oct6-Oct12', 'Oct13-Oct19'],
+        6: ['Oct20-Oct26', 'Oct27-Nov2'],
+        7: ['Nov3-Nov9', 'Nov10-Nov16'],
+        8: ['Nov17-Nov23', 'Nov24-Nov30'],
+        9: ['Dec1-Dec7', 'Dec8-Dec14'],
+        10: ['Dec15-Dec21', 'Dec22-Dec28'],
+        // Add more cycles as needed
+      };
+      
+      // Find current week in cycles
+      for (const [cycleNum, weeks] of Object.entries(weekCycles)) {
+        const weekIndex = weeks.indexOf(currentWeekKey);
+        if (weekIndex !== -1) {
+          if (weekIndex === 0 && weekCycles[cycleNum + 1]) {
+            // First week of cycle, go to first week of next cycle
+            return weekCycles[cycleNum + 1][0];
+          } else if (weekIndex === 1) {
+            // Second week of cycle, go to first week of next cycle
+            return weekCycles[cycleNum + 1] ? weekCycles[cycleNum + 1][0] : null;
+          }
+        }
+      }
+      
+      return null;
+    }
+
+    // Function to auto-fill empty slots
+    async function autoFillEmptySlots(weekKey) {
+      try {
+        console.log(`Auto-filling empty slots for ${weekKey}`);
+        
+        // Get current bookings for this week
+        const bookingsRef = ref(db, `bookings/${weekKey}`);
+        const bookingsSnapshot = await get(bookingsRef);
+        
+        if (!bookingsSnapshot.exists()) return;
+        
+        const bookings = bookingsSnapshot.val();
+        
+        // For each day and role, check if slots are empty and fill them
+        for (const [day, dayData] of Object.entries(bookings)) {
+          for (const [role, roleData] of Object.entries(dayData)) {
+            const currentBookings = Object.values(roleData);
+            const maxSlots = role === 'BlogPost' ? 1 : 3;
+            
+            if (currentBookings.length < maxSlots) {
+              const slotsToFill = maxSlots - currentBookings.length;
+              console.log(`Filling ${slotsToFill} slots for ${day} ${role}`);
+              
+              // Auto-assign using the same logic as manual auto-assign
+              await autoAssignSlots(weekKey, day, role, slotsToFill);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error auto-filling slots:', error);
+      }
+    }
+
+    // Function to auto-assign slots (extracted from existing auto-assign logic)
+    async function autoAssignSlots(weekKey, day, role, slotsToFill) {
       try {
         // Fetch members
         let teamType = (role === 'Design') ? 'designTeam' : 'contentTeam';
         const membersSnap = await get(ref(db, `members/${teamType}`));
         const members = membersSnap.exists() ? membersSnap.val() : {};
         
-        // Fetch current bookings
-        const slotRef = ref(db, `bookings/${range}/${day}/${role}`);
-        const bookingsSnap = await get(slotRef);
-        const currentBookings = bookingsSnap.exists() ? bookingsSnap.val() : {};
+        // Get current bookings to check for breaks and group prevention
+        const slotRef = ref(db, `bookings/${weekKey}/${day}/${role}`);
+        const currentBookings = Object.values(members).filter(m => !Object.values(members).some(existing => existing.number === m.number));
         
-        const alreadyAssignedNumbers = new Set(Object.values(currentBookings).map(m => m.number));
-        const unassigned = Object.values(members).filter(m => !alreadyAssignedNumbers.has(m.number));
+        // Apply break logic and group prevention (same as manual auto-assign)
+        let availableMembers = currentBookings;
         
-        // How many to assign?
-        const maxSlots = role === 'BlogPost' ? 1 : 3;
-        const toAssign = maxSlots - Object.keys(currentBookings).length;
+        // Check for people who worked in previous weeks
+        const allBookingsRef = ref(db, 'bookings');
+        const allBookingsSnapshot = await get(allBookingsRef);
         
-        if (toAssign <= 0) return; // Already filled
-        
-        // Apply break logic and group prevention (reuse existing logic)
-        let availableMembers = unassigned;
-        
-        // Check for people who worked in the previous week and prevent same group formation
-        try {
-          const allBookingsRef = ref(db, 'bookings');
-          const allBookingsSnapshot = await get(allBookingsRef);
-          
-          if (allBookingsSnapshot.exists()) {
-            const allBookings = allBookingsSnapshot.val();
-            
-            // Sort weeks chronologically
-            const allWeekKeys = Object.keys(allBookings).sort((a, b) => {
-              const parseWeekStart = (weekKey) => {
-                const match = weekKey.match(/([A-Za-z]+)(\d+)/);
-                if (!match) return new Date(0);
-                
-                const month = match[1];
-                const day = parseInt(match[2]);
-                const year = 2025;
-                
-                const monthMap = {
-                  'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
-                  'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
-                };
-                
-                return new Date(year, monthMap[month], day);
+        if (allBookingsSnapshot.exists()) {
+          const allBookings = allBookingsSnapshot.val();
+          const allWeekKeys = Object.keys(allBookings).sort((a, b) => {
+            const parseWeekStart = (weekKey) => {
+              const match = weekKey.match(/([A-Za-z]+)(\d+)/);
+              if (!match) return new Date(0);
+              const month = match[1];
+              const day = parseInt(match[2]);
+              const year = 2025;
+              const monthMap = {
+                'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+                'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
               };
-              
-              const dateA = parseWeekStart(a);
-              const dateB = parseWeekStart(b);
-              return dateA - dateB;
-            });
+              return new Date(year, monthMap[month], day);
+            };
+            const dateA = parseWeekStart(a);
+            const dateB = parseWeekStart(b);
+            return dateA - dateB;
+          });
+          
+          const currentWeekIndex = allWeekKeys.indexOf(weekKey);
+          
+          if (currentWeekIndex > 0) {
+            // Get immediate previous week for break logic
+            const previousWeek = allWeekKeys[currentWeekIndex - 1];
+            const lastWeekBookings = allBookings[previousWeek];
+            const lastWeekWorkers = new Set();
             
-            const currentWeekIndex = allWeekKeys.indexOf(range);
-            
-            if (currentWeekIndex > 0) {
-              const previousWeek = allWeekKeys[currentWeekIndex - 1];
-              const lastWeekBookings = allBookings[previousWeek];
-              const lastWeekWorkers = new Set();
-              
-              // Collect all people who worked in the previous week
-              Object.values(lastWeekBookings).forEach(dayData => {
-                Object.values(dayData).forEach(roleData => {
-                  Object.values(roleData).forEach(member => {
-                    lastWeekWorkers.add(member.number);
-                  });
+            // Collect all people who worked in the previous week
+            Object.values(lastWeekBookings).forEach(dayData => {
+              Object.values(dayData).forEach(roleData => {
+                Object.values(roleData).forEach(member => {
+                  lastWeekWorkers.add(member.number);
                 });
               });
+            });
+            
+            // Filter out people who worked in the previous week
+            availableMembers = currentBookings.filter(m => !lastWeekWorkers.has(m.number));
+            
+            // Apply group prevention logic
+            if (availableMembers.length >= slotsToFill) {
+              const allPreviousGroups = [];
               
-              // Filter out people who worked in the previous week
-              availableMembers = unassigned.filter(m => !lastWeekWorkers.has(m.number));
-              
-              // Prevent same group formation from all previous weeks
-              if (availableMembers.length >= toAssign) {
-                const allPreviousGroups = [];
+              // Collect groups from all previous weeks
+              for (let i = 0; i < currentWeekIndex; i++) {
+                const pastWeek = allWeekKeys[i];
+                const pastWeekBookings = allBookings[pastWeek];
                 
-                for (let i = 0; i < currentWeekIndex; i++) {
-                  const pastWeek = allWeekKeys[i];
-                  const pastWeekBookings = allBookings[pastWeek];
-                  
-                  Object.entries(pastWeekBookings).forEach(([pastDay, pastDayData]) => {
-                    Object.entries(pastDayData).forEach(([pastRole, pastRoleData]) => {
-                      const groupMembers = Object.values(pastRoleData);
-                      if (groupMembers.length > 0) {
-                        allPreviousGroups.push({
-                          members: groupMembers,
-                          day: pastDay,
-                          role: pastRole,
-                          week: pastWeek
-                        });
-                      }
+                Object.entries(pastWeekBookings).forEach(([pastDay, pastDayData]) => {
+                  Object.entries(pastDayData).forEach(([pastRole, pastRoleData]) => {
+                    const groupMembers = Object.values(pastRoleData);
+                    if (groupMembers.length > 0) {
+                      allPreviousGroups.push({
+                        members: groupMembers,
+                        day: pastDay,
+                        role: pastRole,
+                        week: pastWeek
+                      });
+                    }
+                  });
+                });
+              }
+              
+              // Prevent same group formation
+              if (allPreviousGroups.length > 0) {
+                const sameDayRoleGroups = allPreviousGroups.filter(group => group.day === day && group.role === role);
+                
+                if (sameDayRoleGroups.length > 0) {
+                  const allPreviousGroupMembers = new Set();
+                  sameDayRoleGroups.forEach(group => {
+                    group.members.forEach(member => {
+                      allPreviousGroupMembers.add(member.number);
                     });
                   });
-                }
-                
-                if (allPreviousGroups.length > 0) {
-                  const sameDayRoleGroups = allPreviousGroups.filter(group => group.day === day && group.role === role);
                   
-                  if (sameDayRoleGroups.length > 0) {
-                    const allPreviousGroupMembers = new Set();
-                    sameDayRoleGroups.forEach(group => {
-                      group.members.forEach(member => {
-                        allPreviousGroupMembers.add(member.number);
-                      });
-                    });
-                    
-                    const availableForDifferentGroup = availableMembers.filter(m => !allPreviousGroupMembers.has(m.number));
-                    
-                    if (availableForDifferentGroup.length >= toAssign) {
-                      availableMembers = availableForDifferentGroup;
-                    }
+                  const availableForDifferentGroup = availableMembers.filter(m => !allPreviousGroupMembers.has(m.number));
+                  
+                  if (availableForDifferentGroup.length >= slotsToFill) {
+                    availableMembers = availableForDifferentGroup;
                   }
                 }
               }
             }
           }
-        } catch (err) {
-          console.error('Error checking previous week bookings:', err);
         }
         
         // Randomly pick members
-        if (availableMembers.length >= toAssign) {
-          const shuffled = availableMembers.sort(() => 0.5 - Math.random());
-          const selected = shuffled.slice(0, toAssign);
-          
-          // Assign them
-          for (const member of selected) {
-            await push(slotRef, {
-              name: member.name,
-              number: member.number,
-              date: formatDate(dateRanges[range].days[day].date || dateRanges[range].days[day])
-            });
-          }
+        const shuffled = availableMembers.sort(() => 0.5 - Math.random());
+        const selected = shuffled.slice(0, slotsToFill);
+        
+        // Assign them
+        for (const member of selected) {
+          await push(slotRef, {
+            name: member.name,
+            number: member.number,
+            date: formatDate(dateRanges[weekKey].days[day].date || dateRanges[weekKey].days[day])
+          });
         }
         
+        console.log(`Auto-assigned ${selected.length} members for ${day} ${role}`);
       } catch (error) {
-        console.error(`Error auto-assigning for ${range}/${day}/${role}:`, error);
+        console.error('Error auto-assigning slots:', error);
       }
-    }
-
-    // Function to start the auto-assign timer
-    function startAutoAssignTimer() {
-      // Update timer immediately
-      updateCountdownTimer();
-      
-      // Update timer every second
-      autoAssignInterval = setInterval(updateCountdownTimer, 1000);
-      
-      // Check if it's time to auto-assign every minute
-      setInterval(() => {
-        const nextSunday7PM = getNextSunday7PM();
-        const now = new Date();
-        if (now.getTime() >= nextSunday7PM.getTime()) {
-          runAutoAssignForCurrentCycle();
-        }
-      }, 60000); // Check every minute
-    }
-
-    // Function to stop the auto-assign timer
-    function stopAutoAssignTimer() {
-      if (autoAssignInterval) {
-        clearInterval(autoAssignInterval);
-        autoAssignInterval = null;
-      }
-    }
-
-    // Function to start member countdown timer (for main portal)
-    function startMemberCountdownTimer() {
-      // Update timer immediately
-      updateMemberCountdownDisplay(0, 0, 0, 0);
-      
-      // Update timer every second
-      setInterval(() => {
-        const nextSunday7PM = getNextSunday7PM();
-        const now = new Date();
-        const timeDiff = nextSunday7PM.getTime() - now.getTime();
-        
-        if (timeDiff > 0) {
-          const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
-          
-          updateMemberCountdownDisplay(days, hours, minutes, seconds);
-        }
-      }, 1000);
-    }
-
-    // Manual Auto-Assign Button
-    const manualAutoAssignBtn = document.getElementById('manualAutoAssignBtn');
-    if (manualAutoAssignBtn) {
-      manualAutoAssignBtn.addEventListener('click', async () => {
-        manualAutoAssignBtn.classList.add('loading');
-        manualAutoAssignBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>Running...';
-        
-        try {
-          await runAutoAssignForCurrentCycle();
-        } catch (error) {
-          console.error('Manual auto-assign failed:', error);
-          showToast('Manual auto-assign failed', 'error');
-        } finally {
-          manualAutoAssignBtn.classList.remove('loading');
-          manualAutoAssignBtn.innerHTML = '<i class="fas fa-magic" style="margin-right: 0.5rem;"></i>Run Auto-Assign Now';
-        }
-      });
     }
 
     function formatDate(date) {
@@ -1532,7 +1458,15 @@
         const currentBookings = snapshot.exists() ? snapshot.val() : {};
         const maxSlots = formData.role === 'BlogPost' ? 1 : 3;
         if (Object.keys(currentBookings).length >= maxSlots) {
-          showToast(`Maximum ${maxSlots} slot${maxSlots > 1 ? 's' : ''} filled`, 'warning');
+          // Show detailed message about which slots are filled
+          let filledSlotsInfo = '';
+          if (formData.role === 'BlogPost') {
+            filledSlotsInfo = 'Blog Post slot is already filled for this week.';
+          } else {
+            filledSlotsInfo = `${formData.role} slots are already filled for this week.`;
+          }
+          
+          showToast(`${filledSlotsInfo} Please choose a different week or role.`, 'warning');
           submitButton.classList.remove('loading');
           return;
         }
@@ -1565,13 +1499,33 @@
       try {
         const dateRangeKeys = Object.keys(dateRanges).sort();
         container.innerHTML = '';
-        for (const range of dateRangeKeys) {
+        // Only show the 2 weeks from current cycle
+        const currentWeeks = Object.keys(dateRanges).sort();
+        
+        for (const range of currentWeeks) {
           const rangeRef = ref(db, 'bookings/' + range);
           const snapshot = await get(rangeRef);
           const data = snapshot.exists() ? snapshot.val() : {};
           const rangeDiv = document.createElement('div');
-          const weekNumber = dateRangeKeys.indexOf(range) + 1;
-          rangeDiv.innerHTML = `<h3>Week ${weekNumber}: ${range.replace('-', ' - ')}</h3>`;
+          
+          // Determine week label and style
+          let weekLabel, weekStyle;
+          if (range === currentActiveWeek) {
+            // Check if all slots are filled for current week
+            const allSlotsFilled = await checkIfAllSlotsFilled(range);
+            if (allSlotsFilled) {
+              weekLabel = 'Slots Filled - Wait for next week!';
+              weekStyle = 'color: var(--warning); font-weight: 600;';
+            } else {
+              weekLabel = 'Slots Open - Book Now!';
+              weekStyle = 'color: var(--success); font-weight: 700;';
+            }
+          } else {
+            weekLabel = 'Slots Filled - Completed';
+            weekStyle = 'color: var(--text-muted);';
+          }
+          
+          rangeDiv.innerHTML = `<h3 style="${weekStyle}">${weekLabel}: ${range.replace('-', ' - ')}</h3>`;
           if (Object.keys(data).length === 0) {
             const noBookingsDiv = document.createElement('div');
             noBookingsDiv.className = 'no-bookings';
@@ -1637,106 +1591,37 @@
       }
     }
 
-    // Function to start Firebase real-time listener for week changes
-    function startWeekChangeListener() {
+    window.onload = async function() {
       try {
-        // Try to use the bookings path which should have permissions
-        const weekSyncRef = ref(db, 'weekSync');
-        
-        // Listen for changes to weekSync in Firebase
-        onValue(weekSyncRef, (snapshot) => {
-          if (snapshot.exists()) {
-            const syncData = snapshot.val();
-            const newWeekStart = new Date(syncData.weekStart);
-            const currentStored = localStorage.getItem('tensorCurrentWeekStart');
-            
-            // Check if week has changed
-            if (!currentStored || newWeekStart.getTime() !== new Date(currentStored).getTime()) {
-              console.log('Week start changed in Firebase, updating locally');
-              localStorage.setItem('tensorCurrentWeekStart', newWeekStart.toISOString());
-              currentWeekStart = newWeekStart;
-              
-              // Reload weeks and refresh display
-              getCurrentActiveWeeks().then(() => {
-                displaySlots().catch(error => {
-                  console.error('Error refreshing slots after week change:', error);
-                });
-                
-                // If admin dashboard is visible, refresh it too
-                if (document.getElementById('adminDashboardSection').style.display !== 'none') {
-                  loadAssignTasks();
-                }
-              });
-              
-              // Show popup message
-              showToast('Week updated from another device!', 'info');
-            }
+        await getCurrentActiveWeeks();
+      } catch (error) {
+        console.error('Failed to load weeks, using fallback:', error);
+        // Force fallback initialization
+        const fallbackWeeks = ['Aug25-Aug31', 'Sep1-Sep7'];
+        dateRanges = {};
+        fallbackWeeks.forEach(weekKey => {
+          const range = generateDateRange(weekKey);
+          if (range) {
+            dateRanges[weekKey] = range;
           }
-        }, (error) => {
-          console.log('Firebase week change listener failed:', error);
-          // Fallback to polling if real-time fails
-          startWeekChangePolling();
         });
         
-        console.log('Week change real-time listener started');
-      } catch (error) {
-        console.error('Error starting week change listener:', error);
-        // Fallback to polling
-        startWeekChangePolling();
+        currentActiveWeek = fallbackWeeks[1]; // Sep1-Sep7
+        currentWeekCycle = 2;
+        
+        console.log('Manual fallback weeks set:', fallbackWeeks);
+        console.log('Manual fallback current active week:', currentActiveWeek);
+        
+        updateWeekDropdowns();
+        
+        if (currentActiveWeek) {
+          startCountdown(currentActiveWeek);
+        }
       }
-    }
-
-    // Fallback polling function if real-time listener fails
-    function startWeekChangePolling() {
-      try {
-        console.log('Starting fallback polling (every 3 seconds)');
-        setInterval(async () => {
-          try {
-            const weekSyncRef = ref(db, 'weekSync');
-            const weekSyncSnap = await get(weekSyncRef);
-            
-            if (weekSyncSnap.exists()) {
-              const syncData = weekSyncSnap.val();
-              const newWeekStart = new Date(syncData.weekStart);
-              const currentStored = localStorage.getItem('tensorCurrentWeekStart');
-              
-              if (!currentStored || newWeekStart.getTime() !== new Date(currentStored).getTime()) {
-                console.log('Week change detected via polling');
-                localStorage.setItem('tensorCurrentWeekStart', newWeekStart.toISOString());
-                currentWeekStart = newWeekStart;
-                
-                await getCurrentActiveWeeks();
-                await displaySlots().catch(error => {
-                  console.error('Error refreshing slots after week change:', error);
-                });
-                
-                if (document.getElementById('adminDashboardSection').style.display !== 'none') {
-                  loadAssignTasks();
-                }
-                
-                showToast('Week updated from another device!', 'info');
-              }
-            }
-          } catch (error) {
-            console.log('Polling failed:', error);
-          }
-        }, 3000);
-      } catch (error) {
-        console.error('Error starting polling fallback:', error);
-      }
-    }
-
-    window.onload = async function() {
-      await getCurrentActiveWeeks();
+      
       displaySlots().catch(error => {
         console.error('Error loading slots:', error);
       });
-      
-      // Start the member countdown timer for main portal
-      startMemberCountdownTimer();
-      
-      // Start listening for week changes from other devices
-      startWeekChangeListener();
     }
 
     // --- Routing and Admin Logic ---
@@ -1803,50 +1688,7 @@
       });
     }
 
-    // --- Advance Week Button ---
-    const advanceCycleBtn = document.getElementById('advanceCycleBtn');
-    if (advanceCycleBtn) {
-      advanceCycleBtn.addEventListener('click', async () => {
-        // Prevent multiple clicks
-        if (advanceCycleBtn.classList.contains('loading')) {
-          return;
-        }
-        
-        console.log('Advance Week button clicked');
-        console.log('Current week start before:', currentWeekStart);
-        
-        // Show loading state
-        advanceCycleBtn.classList.add('loading');
-        advanceCycleBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>Advancing...';
-        advanceCycleBtn.disabled = true;
-        
-        try {
-          await advanceToNextWeek();
-          
-          // Show success state briefly
-          advanceCycleBtn.innerHTML = '<i class="fas fa-check" style="margin-right: 0.5rem;"></i>Advanced!';
-          advanceCycleBtn.style.background = 'var(--success)';
-          
-          // Reset button after 2 seconds
-          setTimeout(() => {
-            advanceCycleBtn.classList.remove('loading');
-            advanceCycleBtn.innerHTML = 'Next Week';
-            advanceCycleBtn.style.background = 'var(--warning)';
-            advanceCycleBtn.disabled = false;
-          }, 2000);
-          
-        } catch (error) {
-          console.error('Error in advance week button:', error);
-          
-          // Reset button on error
-          advanceCycleBtn.classList.remove('loading');
-          advanceCycleBtn.innerHTML = 'Next Week';
-          advanceCycleBtn.disabled = false;
-        }
-      });
-    }
-
-
+    // Advance cycle functionality removed - now automatic with countdown timer
 
     // --- Hamburger Menu Functionality ---
     const hamburgerBtn = document.getElementById('hamburgerBtn');
@@ -1927,41 +1769,113 @@
       });
     }
 
-    // Function to ensure week change listener is active for admin dashboard
-    function ensureWeekChangeListener() {
-      // Start the listener if not already started
-      if (!window.weekChangeListenerActive) {
-        startWeekChangeListener();
-        window.weekChangeListenerActive = true;
-        console.log('Week change listener activated for admin dashboard');
-      }
-    }
-
     // --- Members List Logic ---
     async function loadMembers() {
-      const contentTeamList = document.getElementById('contentTeamList');
-      const designTeamList = document.getElementById('designTeamList');
+      console.log('Loading members...');
+      let contentTeamList = document.getElementById('contentTeamList');
+      let designTeamList = document.getElementById('designTeamList');
+      
+      // Retry mechanism if elements aren't found (limit retries to prevent infinite loops)
+      if (!contentTeamList || !designTeamList) {
+        console.log('Member list elements not found, retrying in 200ms...');
+        // Only retry once to prevent infinite loops
+        if (!window.membersLoadRetryCount) {
+          window.membersLoadRetryCount = 1;
+          setTimeout(() => {
+            loadMembers();
+          }, 200);
+        } else {
+          console.error('Failed to load members after retry');
+        }
+        return;
+      }
+      
       contentTeamList.innerHTML = '';
       designTeamList.innerHTML = '';
+      
       try {
+        console.log('Fetching members from Firebase...');
         const membersSnap = await get(ref(db, 'members'));
         const members = membersSnap.exists() ? membersSnap.val() : {};
+        console.log('Members data:', members);
+        
         const content = members.contentTeam || {};
         const design = members.designTeam || {};
+        
+        console.log('Content team:', content);
+        console.log('Design team:', design);
+        
+        // Check if we have any members
+        if (Object.keys(content).length === 0 && Object.keys(design).length === 0) {
+          console.log('No members found in Firebase, showing sample data');
+          // Show sample data for testing
+          const sampleContent = [
+            { name: 'Sample Content Member 1', number: 'C001' },
+            { name: 'Sample Content Member 2', number: 'C002' }
+          ];
+          const sampleDesign = [
+            { name: 'Sample Design Member 1', number: 'D001' },
+            { name: 'Sample Design Member 2', number: 'D002' }
+          ];
+          
+          sampleContent.forEach(member => {
+            const li = document.createElement('li');
+            li.style.marginBottom = '1rem';
+            li.innerHTML = `<div style="display:flex;flex-direction:column;gap:0.2rem;"><span style="font-weight:600;">${member.name}</span><span style="color:var(--text-muted);font-size:0.95em;">${member.number}</span></div>`;
+            contentTeamList.appendChild(li);
+          });
+          
+          sampleDesign.forEach(member => {
+            const li = document.createElement('li');
+            li.style.marginBottom = '1rem';
+            li.innerHTML = `<div style="display:flex;flex-direction:column;gap:0.2rem;"><span style="font-weight:600;">${member.name}</span><span style="color:var(--text-muted);font-size:0.95em;">${member.number}</span></div>`;
+            designTeamList.appendChild(li);
+          });
+          
+          console.log('Sample members displayed');
+          return;
+        }
+        
+        // Display real members
         for (const [key, member] of Object.entries(content)) {
           const li = document.createElement('li');
           li.style.marginBottom = '1rem';
           li.innerHTML = `<div style="display:flex;flex-direction:column;gap:0.2rem;"><span style="font-weight:600;">${member.name}</span><span style="color:var(--text-muted);font-size:0.95em;">${member.number}</span></div>`;
           contentTeamList.appendChild(li);
         }
+        
         for (const [key, member] of Object.entries(design)) {
           const li = document.createElement('li');
           li.style.marginBottom = '1rem';
           li.innerHTML = `<div style="display:flex;flex-direction:column;gap:0.2rem;"><span style="font-weight:600;">${member.name}</span><span style="color:var(--text-muted);font-size:0.95em;">${member.number}</span></div>`;
           designTeamList.appendChild(li);
         }
+        
+        console.log(`Loaded ${Object.keys(content).length} content members and ${Object.keys(design).length} design members`);
+        
       } catch (err) {
+        console.error('Error loading members:', err);
         showToast('Failed to load members', 'error');
+        
+        // Show fallback message and sample data
+        contentTeamList.innerHTML = `
+          <li style="color: var(--text-muted); margin-bottom: 1rem;">Unable to load members due to Firebase permission error</li>
+          <li style="margin-bottom: 1rem;">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span style="font-weight:600;">Sample Content Member</span>
+              <span style="color:var(--text-muted);font-size:0.95em;">C001</span>
+            </div>
+          </li>
+        `;
+        designTeamList.innerHTML = `
+          <li style="color: var(--text-muted); margin-bottom: 1rem;">Unable to load members due to Firebase permission error</li>
+          <li style="margin-bottom: 1rem;">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span style="font-weight:600;">Sample Design Member</span>
+              <span style="color:var(--text-muted);font-size:0.95em;">D001</span>
+            </div>
+          </li>
+        `;
       }
     }
 
@@ -2167,6 +2081,8 @@
 
     // --- Load Admin Dashboard ---
     async function loadAdminDashboard() {
+      console.log('Loading admin dashboard...');
+      
       // Default to Members tab
       document.getElementById('adminMembersSection').style.display = 'block';
       document.getElementById('adminAssignSection').style.display = 'none';
@@ -2177,18 +2093,16 @@
       navAssign.style.color = 'var(--text)';
       navAutoAssign.style.background = 'var(--surface-light)';
       navAutoAssign.style.color = 'var(--text)';
+      
       await getCurrentActiveWeeks();
+      
+      // Add a small delay to ensure DOM is ready
+      setTimeout(() => {
+        console.log('Calling loadMembers after delay...');
       loadMembers();
+      }, 100);
+      
       // Don't load assign tasks here - only load when tab is clicked
-      
-      // Start the auto-assign timer
-      startAutoAssignTimer();
-      
-      // Ensure week change listener is active for real-time sync
-      ensureWeekChangeListener();
-      
-      // Debug: Test if listener is working
-      console.log('Admin dashboard loaded, week change listener should be active');
     }
 
     // --- Auto-Assign Tab Logic ---
@@ -2285,8 +2199,11 @@
               const allWeekKeys = Object.keys(allBookings).sort((a, b) => {
                 // Parse week keys like "Aug4-Aug10" to get start dates
                 const parseWeekStart = (weekKey) => {
-                  const match = weekKey.match(/([A-Za-z]+)(\d+)/);
-                  if (!match) return new Date(0);
+                  // Match format like "Aug4-Aug10" and extract "Aug4" part
+                  const match = weekKey.match(/^([A-Za-z]+)(\d+)-/);
+                  if (!match) {
+                    return new Date(0);
+                  }
                   
                   const month = match[1];
                   const day = parseInt(match[2]);
@@ -2297,7 +2214,8 @@
                     'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
                   };
                   
-                  return new Date(year, monthMap[month], day);
+                  const date = new Date(year, monthMap[month], day);
+                  return date;
                 };
                 
                 const dateA = parseWeekStart(a);
@@ -2310,7 +2228,6 @@
               if (currentWeekIndex > 0) { // If not the first week ever, check previous weeks
                 // Get the immediate previous week for break logic
                 const previousWeek = allWeekKeys[currentWeekIndex - 1];
-                console.log(`Current week: ${range}, Previous week: ${previousWeek}`); // Debug log
                 
                 // Collect groups from ALL previous weeks (not just the immediate previous week)
                 for (let i = 0; i < currentWeekIndex; i++) {
@@ -2333,7 +2250,6 @@
                         if (pastWeek === previousWeek) {
                           groupMembers.forEach(member => {
                             lastWeekWorkers.add(member.number);
-                            console.log(`Found worker from previous week: ${member.name} (${member.number})`); // Debug log
                           });
                         }
                       }
@@ -2341,11 +2257,8 @@
                   });
                 }
                 
-                console.log(`Found ${allPreviousGroups.length} groups from all previous weeks`);
-                
                 // Filter out people who worked in the previous week (for break logic)
                 availableMembers = unassigned.filter(m => !lastWeekWorkers.has(m.number));
-                console.log(`Available members after filtering: ${availableMembers.map(m => m.name).join(', ')}`); // Debug log
                 
                 if (availableMembers.length === 0) {
                   showToast('All available members worked last week. No breaks possible.', 'warning');
@@ -2386,9 +2299,9 @@
             console.error('Error checking previous week bookings:', err);
           }
           
-          // Randomly pick members
-          const shuffled = availableMembers.sort(() => 0.5 - Math.random());
-          const selected = shuffled.slice(0, toAssign);
+                          // Randomly pick members
+                const shuffled = availableMembers.sort(() => 0.5 - Math.random());
+                const selected = shuffled.slice(0, toAssign);
           // Assign them
           for (const member of selected) {
             await push(slotRef, {
